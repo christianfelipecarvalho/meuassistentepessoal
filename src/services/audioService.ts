@@ -362,32 +362,34 @@ export class SpeechTranscriber implements ISpeechTranscriber {
 
     console.log('🔄 [BOTÃO PRINCIPAL] Iniciando transcrição em tempo real...');
     
-    // Sempre inicializar se não estiver inicializado (igual ao SpeechTest)
-    if (!this.isInitialized || !this.recognition) {
-      console.log('🔄 [BOTÃO PRINCIPAL] Inicializando reconhecimento...');
-      this.initializeRecognition();
-      
-      if (!this.recognition) {
-        console.log('❌ [BOTÃO PRINCIPAL] Falha ao inicializar reconhecimento');
-        onError(new Error('Falha ao inicializar reconhecimento de voz'));
-        return;
-      }
+    // SEMPRE criar uma nova instância para evitar problemas de estado (igual ao SpeechTest)
+    console.log('🔧 [BOTÃO PRINCIPAL] Criando nova instância do Speech Recognition...');
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      console.log('❌ [BOTÃO PRINCIPAL] Speech Recognition não disponível');
+      onError(new Error('Speech Recognition não disponível'));
+      return;
     }
     
-    console.log('⚙️ [BOTÃO PRINCIPAL] Configurações aplicadas');
-    console.log(`Idioma: ${this.recognition.lang}`);
-    console.log(`Contínuo: ${this.recognition.continuous}`);
-    console.log(`Resultados interim: ${this.recognition.interimResults}`);
+    // Criar nova instância sempre
+    this.recognition = new SpeechRecognition();
     
-    // Configurações otimizadas para mobile (igual ao SpeechTest)
+    console.log('⚙️ [BOTÃO PRINCIPAL] Configurando nova instância...');
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
+    this.recognition.lang = 'pt-BR';
     
     // Configurações específicas para mobile
     if (this.isMobileDevice()) {
       this.recognition.maxAlternatives = 3;
       console.log('📱 [BOTÃO PRINCIPAL] Configurações mobile aplicadas');
     }
+    
+    console.log('⚙️ [BOTÃO PRINCIPAL] Configurações aplicadas');
+    console.log(`Idioma: ${this.recognition.lang}`);
+    console.log(`Contínuo: ${this.recognition.continuous}`);
+    console.log(`Resultados interim: ${this.recognition.interimResults}`);
 
     let accumulatedText = '';
     let isStarted = false;
