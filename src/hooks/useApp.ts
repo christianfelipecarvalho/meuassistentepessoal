@@ -67,10 +67,15 @@ export const useApp = () => {
 
   const startRecording = useCallback(async () => {
     try {
-      console.log('🎤 Iniciando gravação...');
+      console.log('🎤 Iniciando gravação principal...');
+      
+      // Primeiro iniciar a gravação de áudio
       await audioRecorder.startRecording();
       setRecordingState(prev => ({ ...prev, isRecording: true }));
       setCurrentTranscription('');
+      
+      // Aguardar um pouco para garantir que a gravação iniciou
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Iniciar transcrição em tempo real
       console.log('🔄 Iniciando transcrição em tempo real...');
@@ -81,6 +86,7 @@ export const useApp = () => {
         },
         (error: Error) => {
           console.error('❌ Erro na transcrição em tempo real:', error);
+          // Não parar a gravação se a transcrição falhar
         }
       );
     } catch (error) {
@@ -90,8 +96,16 @@ export const useApp = () => {
   }, [audioRecorder, transcriber]);
 
   const stopRecording = useCallback(async () => {
-    // Parar transcrição em tempo real
+    console.log('⏹️ Parando gravação principal...');
+    
+    // Parar transcrição em tempo real primeiro
+    console.log('🔄 Parando transcrição em tempo real...');
     transcriber.stopRealTimeTranscription();
+    
+    // Aguardar um pouco para garantir que a transcrição finalizou
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    console.log(`📝 Transcrição final capturada: "${currentTranscription}"`);
 
     // Métodos auxiliares seguindo Single Responsibility Principle
     const processAudioOnline = async (audioBlob: Blob): Promise<void> => {

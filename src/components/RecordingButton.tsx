@@ -18,7 +18,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
   onStopRecording,
   permissionsGranted = true
 }) => {
-  const handleMouseDown = () => {
+  const handleClick = () => {
     if (!permissionsGranted) {
       // Se não tem permissão, solicitar imediatamente
       requestMicrophonePermission();
@@ -27,6 +27,8 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     
     if (!recordingState.isRecording && !recordingState.isProcessing) {
       onStartRecording();
+    } else if (recordingState.isRecording) {
+      onStopRecording();
     }
   };
 
@@ -63,9 +65,9 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       return '⏳ Processando...';
     }
     if (recordingState.isRecording) {
-      return '🔴 Gravando...';
+      return '🔴 Parar Gravação';
     }
-    return '🎤 Pressione para gravar';
+    return '🎤 Gravar Gasto/Ganho';
   };
 
   const getInstructionText = () => {
@@ -73,9 +75,9 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       return 'Clique no botão para permitir o acesso ao microfone';
     }
     if (recordingState.isRecording) {
-      return 'Fale sobre seu gasto ou ganho...';
+      return 'Fale seu gasto ou ganho. Ex: "Gastei 25 reais no almoço"';
     }
-    return 'Pressione e segure para gravar seu gasto ou ganho';
+    return 'Clique para gravar seu gasto ou ganho';
   };
 
   return (
@@ -85,10 +87,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
           className={`${styles.recordingButton} ${
             recordingState.isRecording ? styles.recording : ''
           } ${!permissionsGranted ? styles.disabled : ''}`}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onTouchStart={handleMouseDown}
-          onTouchEnd={handleMouseUp}
+          onClick={handleClick}
           disabled={!permissionsGranted || recordingState.isProcessing}
         >
           {getButtonText()}
@@ -99,10 +98,15 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
         {getInstructionText()}
       </p>
       
-      {currentTranscription && (
+      {/* Exibir transcrição sempre que estiver gravando ou houver transcrição */}
+      {(recordingState.isRecording || currentTranscription) && (
         <div className={styles.transcriptionContainer}>
-          <p className={styles.transcriptionLabel}>Transcrição:</p>
-          <p className={styles.transcriptionText}>{currentTranscription}</p>
+          <p className={styles.transcriptionLabel}>
+            {recordingState.isRecording ? '🎤 Escutando...' : '📝 Transcrição:'}
+          </p>
+          <p className={styles.transcriptionText}>
+            {currentTranscription || (recordingState.isRecording ? 'Fale seu gasto ou ganho...' : 'Processando...')}
+          </p>
         </div>
       )}
     </div>
