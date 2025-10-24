@@ -105,6 +105,75 @@
   border-left: 4px solid #0ea5e9;
 }
 
+/* Status Container */
+.statusContainer {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.statusContainer p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.supported {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.notSupported {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.listening {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.notListening {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.currentTranscript {
+  color: #333;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Logs Container */
+.logsContainer {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.logsContainer h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.logItem {
+  margin: 0.25rem 0;
+  font-size: 0.8rem;
+  color: #666;
+  font-family: monospace;
+  line-height: 1.3;
+}
+
 @media (max-width: 480px) {
   .recordingButton {
     width: 150px;
@@ -120,5 +189,16 @@
   .transcriptionText {
     font-size: 0.9rem;
     padding: 0.5rem;
+  }
+  
+  .statusContainer {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+  }
+  
+  .logsContainer {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    max-height: 150px;
   }
 }
