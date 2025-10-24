@@ -67,21 +67,24 @@ export const useApp = () => {
 
   const startRecording = useCallback(async () => {
     try {
+      console.log('🎤 Iniciando gravação...');
       await audioRecorder.startRecording();
       setRecordingState(prev => ({ ...prev, isRecording: true }));
       setCurrentTranscription('');
       
       // Iniciar transcrição em tempo real
+      console.log('🔄 Iniciando transcrição em tempo real...');
       transcriber.startRealTimeTranscription(
         (text: string) => {
+          console.log(`📝 Transcrição em tempo real: "${text}"`);
           setCurrentTranscription(text);
         },
         (error: Error) => {
-          console.error('Erro na transcrição em tempo real:', error);
+          console.error('❌ Erro na transcrição em tempo real:', error);
         }
       );
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('❌ Error starting recording:', error);
       throw error;
     }
   }, [audioRecorder, transcriber]);
@@ -92,14 +95,19 @@ export const useApp = () => {
 
     // Métodos auxiliares seguindo Single Responsibility Principle
     const processAudioOnline = async (audioBlob: Blob): Promise<void> => {
+      console.log('🎤 Processando áudio online...');
+      
       // Usar a transcrição em tempo real se disponível, senão transcrever o áudio
       let transcription = currentTranscription.trim();
+      console.log(`📝 Transcrição atual: "${transcription}"`);
       
       if (!transcription) {
         try {
+          console.log('🔄 Tentando transcrever áudio gravado...');
           transcription = await transcriber.transcribeAudio(audioBlob);
+          console.log(`✅ Transcrição do áudio: "${transcription}"`);
         } catch (error) {
-          console.error('Erro na transcrição do áudio:', error);
+          console.error('❌ Erro na transcrição do áudio:', error);
           // Criar uma transação padrão se a transcrição falhar
           transcription = 'Transação não transcrita - valor não detectado';
         }
@@ -107,13 +115,17 @@ export const useApp = () => {
       
       // Se ainda não há transcrição válida, criar uma transação padrão
       if (!transcription || transcription.trim().length === 0) {
+        console.log('⚠️ Transcrição vazia, usando padrão');
         transcription = 'Transação não transcrita - valor não detectado';
       }
       
+      console.log(`📋 Texto final para parsing: "${transcription}"`);
       const transactionData = transcriber.parseTransaction(transcription);
+      console.log('💰 Dados da transação:', transactionData);
       
       // Garantir que há um valor mínimo
       if (transactionData.amount === 0) {
+        console.log('⚠️ Valor zero detectado, usando valor mínimo');
         transactionData.amount = 1; // Valor mínimo
       }
       

@@ -167,8 +167,18 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
       this.recognition.lang = 'pt-BR';
-      this.recognition.maxAlternatives = 1;
+      this.recognition.maxAlternatives = 3; // Aumentar alternativas para melhor precisão
+      
+      // Configurações específicas para mobile
+      if (this.isMobileDevice()) {
+        this.recognition.continuous = true; // Melhor para mobile
+        this.recognition.interimResults = true; // Mostrar resultados parciais
+      }
     }
+  }
+
+  private isMobileDevice(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
 
   async transcribeAudio(audioBlob: Blob): Promise<string> {
@@ -182,11 +192,68 @@ export class SpeechTranscriber implements ISpeechTranscriber {
         return;
       }
 
-      // Para transcrição de áudio gravado, vamos usar uma abordagem diferente
-      // Criamos um elemento de áudio temporário e reproduzimos o áudio
-      // enquanto fazemos o reconhecimento
-      this.transcribeFromBlob(audioBlob, resolve, reject);
+      // Para mobile, usar transcrição direta sem reprodução de áudio
+      if (this.isMobileDevice()) {
+        this.transcribeDirectly(resolve, reject);
+      } else {
+        // Para desktop, usar a abordagem com reprodução de áudio
+        this.transcribeFromBlob(audioBlob, resolve, reject);
+      }
     });
+  }
+
+  private transcribeDirectly(resolve: (text: string) => void, reject: (error: Error) => void): void {
+    let transcriptionResult = '';
+    const timeoutId: NodeJS.Timeout = setTimeout(() => {
+      this.recognition.stop();
+      if (!transcriptionResult) {
+        reject(new Error('Timeout na transcrição'));
+      }
+    }, 10000); // 10 segundos de timeout
+
+    this.recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Priorizar resultado final, mas aceitar interim se necessário
+      if (finalTranscript) {
+        transcriptionResult = finalTranscript;
+      } else if (interimTranscript && !transcriptionResult) {
+        transcriptionResult = interimTranscript;
+      }
+    };
+
+    this.recognition.onend = () => {
+      clearTimeout(timeoutId);
+      if (transcriptionResult) {
+        resolve(transcriptionResult);
+      } else {
+        reject(new Error('Não foi possível transcrever o áudio'));
+      }
+    };
+
+    this.recognition.onerror = (event: any) => {
+      clearTimeout(timeoutId);
+      console.error('Erro na transcrição:', event.error);
+      reject(new Error(`Erro na transcrição: ${event.error}`));
+    };
+
+    // Iniciar reconhecimento
+    try {
+      this.recognition.start();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      reject(new Error('Erro ao iniciar reconhecimento de voz'));
+    }
   }
 
   private transcribeFromBlob(audioBlob: Blob, resolve: (text: string) => void, reject: (error: Error) => void): void {
@@ -248,8 +315,16 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       return;
     }
 
+    // Configurações otimizadas para mobile
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
+    
+    // Configurações específicas para mobile
+    if (this.isMobileDevice()) {
+      this.recognition.maxAlternatives = 3;
+    }
+
+    let accumulatedText = '';
 
     this.recognition.onresult = (event: any) => {
       let interimTranscript = '';
@@ -264,19 +339,30 @@ export class SpeechTranscriber implements ISpeechTranscriber {
         }
       }
 
-      // Enviar tanto o resultado final quanto o interim
+      // Acumular texto final
       if (finalTranscript) {
-        onResult(finalTranscript);
+        accumulatedText += finalTranscript + ' ';
+        onResult(accumulatedText.trim());
       } else if (interimTranscript) {
-        onResult(interimTranscript);
+        // Mostrar texto acumulado + interim
+        onResult((accumulatedText + interimTranscript).trim());
       }
     };
 
     this.recognition.onerror = (event: any) => {
+      console.error('Erro na transcrição em tempo real:', event.error);
+      // Não parar por erros menores em mobile
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        return;
+      }
       onError(new Error(`Erro na transcrição: ${event.error}`));
     };
 
-    this.recognition.start();
+    try {
+      this.recognition.start();
+    } catch (error) {
+      onError(new Error('Erro ao iniciar transcrição em tempo real'));
+    }
   }
 
   stopRealTimeTranscription(): void {
@@ -321,31 +407,55 @@ export class SpeechTranscriber implements ISpeechTranscriber {
   }
 
   private extractAmount(text: string): number {
-    // Padrões para detectar valores monetários
+    console.log(`Tentando extrair valor de: "${text}"`);
+    
+    // Padrões para detectar valores monetários - mais robustos
     const patterns = [
-      /(\d+(?:[.,]\d+)?)\s*(?:reais?|r\$|rs)/gi,
+      // Padrões específicos com "reais"
+      /(\d+(?:[.,]\d+)?)\s*(?:reais?|r\$|rs|real)/gi,
       /r\$\s*(\d+(?:[.,]\d+)?)/gi,
-      /(\d+(?:[.,]\d+)?)\s*(?:real|reais)/gi,
+      
+      // Padrões com palavras-chave monetárias
+      /(?:gastei|paguei|comprei|recebi|ganhei)\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/gi,
+      
+      // Padrões com "de" (ex: "gastei de 50 reais")
+      /(?:de\s*)(\d+(?:[.,]\d+)?)/gi,
+      
+      // Padrões simples de números
       /(\d+(?:[.,]\d+)?)/g
     ];
 
+    // Tentar cada padrão em ordem de prioridade
     for (const pattern of patterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const amountStr = match[0].replace(/[^\d.,]/g, '');
-        const amount = parseFloat(amountStr.replace(',', '.'));
-        if (!isNaN(amount) && amount >= 0) {
-          return amount;
+      const matches = text.match(pattern);
+      if (matches) {
+        for (const match of matches) {
+          // Extrair apenas números, vírgulas e pontos
+          const amountStr = match.replace(/[^\d.,]/g, '');
+          if (amountStr) {
+            // Converter vírgula para ponto
+            const normalizedAmount = amountStr.replace(',', '.');
+            const amount = parseFloat(normalizedAmount);
+            
+            if (!isNaN(amount) && amount > 0 && amount < 1000000) { // Limite razoável
+              console.log(`✅ Valor detectado: ${amount} de "${match}"`);
+              return amount;
+            }
+          }
         }
       }
     }
 
+    console.log(`❌ Nenhum valor detectado em: "${text}"`);
+    
     // Se não conseguir detectar valor, retorna um valor padrão baseado no contexto
     const lowerText = text.toLowerCase();
     if (lowerText.includes('gastei') || lowerText.includes('paguei') || lowerText.includes('comprei')) {
+      console.log(`⚠️ Usando valor padrão para gasto: 1`);
       return 1; // Valor mínimo para gastos
     }
     if (lowerText.includes('recebi') || lowerText.includes('ganhei')) {
+      console.log(`⚠️ Usando valor padrão para ganho: 1`);
       return 1; // Valor mínimo para ganhos
     }
 
