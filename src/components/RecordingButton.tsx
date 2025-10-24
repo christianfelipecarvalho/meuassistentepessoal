@@ -45,7 +45,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       return;
     }
     
-    if (!isListening) {
+    if (!recordingState.isRecording) {
       // Usar o sistema principal do useApp em vez do sistema local
       if (onStartRecording) {
         onStartRecording();
