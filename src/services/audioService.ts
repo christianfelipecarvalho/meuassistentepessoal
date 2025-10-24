@@ -161,12 +161,8 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     
     console.log(`📱 Speech Recognition suportado: ${this.isSupported}`);
     
-    if (this.isSupported) {
-      console.log('✅ Suporte detectado, inicializando reconhecimento...');
-      this.initializeRecognition();
-    } else {
-      console.log('❌ Speech Recognition não suportado neste navegador');
-    }
+    // Não inicializar automaticamente - inicializar apenas quando necessário
+    console.log('⏳ Speech Recognition será inicializado quando necessário');
   }
 
   private initializeRecognition(): void {
@@ -353,8 +349,8 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     console.log('🔍 Recognition disponível:', !!this.recognition);
     console.log('🔍 Já está rodando:', this.isRunning);
     
-    if (!this.isSupported || !this.recognition) {
-      console.log('❌ Speech Recognition não suportado ou não inicializado');
+    if (!this.isSupported) {
+      console.log('❌ Speech Recognition não suportado');
       onError(new Error('Transcrição em tempo real não suportada'));
       return;
     }
@@ -366,10 +362,16 @@ export class SpeechTranscriber implements ISpeechTranscriber {
 
     console.log('🔄 Iniciando transcrição em tempo real...');
     
-    // Garantir que está inicializado, mas não recriar
-    if (!this.isInitialized) {
-      console.log('🔄 Reinicializando reconhecimento...');
+    // Sempre inicializar se não estiver inicializado
+    if (!this.isInitialized || !this.recognition) {
+      console.log('🔄 Inicializando reconhecimento...');
       this.initializeRecognition();
+      
+      if (!this.recognition) {
+        console.log('❌ Falha ao inicializar reconhecimento');
+        onError(new Error('Falha ao inicializar reconhecimento de voz'));
+        return;
+      }
     }
     
     // Configurações otimizadas para mobile
