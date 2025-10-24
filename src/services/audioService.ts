@@ -192,9 +192,11 @@ export class SpeechTranscriber implements ISpeechTranscriber {
         return;
       }
 
-      // Para mobile, usar transcrição direta sem reprodução de áudio
+      // Para mobile, não tentar transcrever áudio gravado
+      // A transcrição deve ser feita em tempo real durante a gravação
       if (this.isMobileDevice()) {
-        this.transcribeDirectly(resolve, reject);
+        console.log('📱 Mobile detectado: transcrição de áudio gravado não suportada');
+        reject(new Error('Transcrição de áudio gravado não suportada no mobile. Use transcrição em tempo real.'));
       } else {
         // Para desktop, usar a abordagem com reprodução de áudio
         this.transcribeFromBlob(audioBlob, resolve, reject);
@@ -315,6 +317,11 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       return;
     }
 
+    console.log('🔄 Iniciando transcrição em tempo real...');
+    
+    // Reinicializar reconhecimento para garantir configurações corretas
+    this.initializeRecognition();
+    
     // Configurações otimizadas para mobile
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
@@ -322,11 +329,15 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     // Configurações específicas para mobile
     if (this.isMobileDevice()) {
       this.recognition.maxAlternatives = 3;
+      console.log('📱 Configurações mobile aplicadas');
     }
 
     let accumulatedText = '';
+    let isStarted = false;
 
     this.recognition.onresult = (event: any) => {
+      console.log('📝 Resultado recebido:', event);
+      
       let interimTranscript = '';
       let finalTranscript = '';
 
@@ -339,28 +350,64 @@ export class SpeechTranscriber implements ISpeechTranscriber {
         }
       }
 
+      console.log(`Final: "${finalTranscript}", Interim: "${interimTranscript}"`);
+
       // Acumular texto final
       if (finalTranscript) {
         accumulatedText += finalTranscript + ' ';
+        console.log(`✅ Texto acumulado: "${accumulatedText.trim()}"`);
         onResult(accumulatedText.trim());
       } else if (interimTranscript) {
         // Mostrar texto acumulado + interim
-        onResult((accumulatedText + interimTranscript).trim());
+        const currentText = (accumulatedText + interimTranscript).trim();
+        console.log(`🔄 Texto atual: "${currentText}"`);
+        onResult(currentText);
+      }
+    };
+
+    this.recognition.onstart = () => {
+      console.log('✅ Transcrição em tempo real iniciada');
+      isStarted = true;
+    };
+
+    this.recognition.onend = () => {
+      console.log('⏹️ Transcrição em tempo real finalizada');
+      if (accumulatedText) {
+        console.log(`📋 Texto final: "${accumulatedText.trim()}"`);
+        onResult(accumulatedText.trim());
       }
     };
 
     this.recognition.onerror = (event: any) => {
-      console.error('Erro na transcrição em tempo real:', event.error);
+      console.error('❌ Erro na transcrição em tempo real:', event.error);
+      
       // Não parar por erros menores em mobile
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        console.log('⚠️ Erro menor ignorado:', event.error);
         return;
       }
+      
+      // Se não conseguiu iniciar, tentar novamente após um delay
+      if (!isStarted && (event.error === 'not-allowed' || event.error === 'service-not-allowed')) {
+        console.log('🔄 Tentando reiniciar após erro de permissão...');
+        setTimeout(() => {
+          try {
+            this.recognition.start();
+          } catch (error) {
+            console.error('❌ Erro ao reiniciar:', error);
+          }
+        }, 1000);
+        return;
+      }
+      
       onError(new Error(`Erro na transcrição: ${event.error}`));
     };
 
     try {
+      console.log('🚀 Iniciando Speech Recognition...');
       this.recognition.start();
     } catch (error) {
+      console.error('❌ Erro ao iniciar transcrição:', error);
       onError(new Error('Erro ao iniciar transcrição em tempo real'));
     }
   }

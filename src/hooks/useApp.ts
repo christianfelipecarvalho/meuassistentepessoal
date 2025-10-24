@@ -97,20 +97,25 @@ export const useApp = () => {
     const processAudioOnline = async (audioBlob: Blob): Promise<void> => {
       console.log('🎤 Processando áudio online...');
       
-      // Usar a transcrição em tempo real se disponível, senão transcrever o áudio
+      // Usar a transcrição em tempo real se disponível
       let transcription = currentTranscription.trim();
       console.log(`📝 Transcrição atual: "${transcription}"`);
       
-      if (!transcription) {
+      // Para mobile, não tentar transcrever áudio gravado
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (!transcription && !isMobile) {
         try {
-          console.log('🔄 Tentando transcrever áudio gravado...');
+          console.log('🔄 Tentando transcrever áudio gravado (desktop)...');
           transcription = await transcriber.transcribeAudio(audioBlob);
           console.log(`✅ Transcrição do áudio: "${transcription}"`);
         } catch (error) {
           console.error('❌ Erro na transcrição do áudio:', error);
-          // Criar uma transação padrão se a transcrição falhar
           transcription = 'Transação não transcrita - valor não detectado';
         }
+      } else if (!transcription && isMobile) {
+        console.log('📱 Mobile: usando apenas transcrição em tempo real');
+        transcription = 'Transação não transcrita - valor não detectado';
       }
       
       // Se ainda não há transcrição válida, criar uma transação padrão

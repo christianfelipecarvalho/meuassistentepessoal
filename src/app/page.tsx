@@ -3,6 +3,7 @@
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { PermissionDebug } from '@/components/PermissionDebug';
+import { TranscriptionDebug } from '@/components/TranscriptionDebug';
 import { RecordingButton } from '@/components/RecordingButton';
 import { SummaryCards } from '@/components/SummaryCards';
 import { useApp } from '@/hooks/useApp';
@@ -12,6 +13,7 @@ import styles from './page.module.css';
 export default function Home() {
   const [currentView, setCurrentView] = useState<'record' | 'list'>('record');
   const [showDebug, setShowDebug] = useState(false);
+  const [showTranscriptionDebug, setShowTranscriptionDebug] = useState(false);
   const {
     isOnline,
     transactions,
@@ -55,13 +57,20 @@ export default function Home() {
         >
           📋 Lista
         </button>
-        <button 
-          className={styles.debugButton}
-          onClick={() => setShowDebug(true)}
-          title="Debug de Permissões"
-        >
-          🔍
-        </button>
+               <button
+                 className={styles.debugButton}
+                 onClick={() => setShowDebug(true)}
+                 title="Debug de Permissões"
+               >
+                 🔍
+               </button>
+               <button
+                 className={styles.debugButton}
+                 onClick={() => setShowTranscriptionDebug(true)}
+                 title="Debug de Transcrição"
+               >
+                 🎤
+               </button>
       </nav>
 
       <main className={styles.mainContent}>
@@ -116,6 +125,11 @@ export default function Home() {
       <PermissionDebug
         isVisible={showDebug}
         onClose={() => setShowDebug(false)}
+      />
+
+      <TranscriptionDebug
+        isVisible={showTranscriptionDebug}
+        onClose={() => setShowTranscriptionDebug(false)}
       />
     </div>
   );
