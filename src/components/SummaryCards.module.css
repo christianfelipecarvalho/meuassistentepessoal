@@ -1,0 +1,53 @@
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.summaryCard {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-2px);
+}
+
+.summaryCard h3 {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.summaryCard .amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.summaryCard.income .amount {
+  color: #22c55e;
+}
+
+.summaryCard.expense .amount {
+  color: #ef4444;
+}
+
+.summaryCard.balance .amount.positive {
+  color: #22c55e;
+}
+
+.summaryCard.balance .amount.negative {
+  color: #ef4444;
+}
+
+@media (max-width: 480px) {
+  .summaryCards {
+    grid-template-columns: 1fr;
+  }
+}

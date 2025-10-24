@@ -1,0 +1,124 @@
+.recordingSection {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.recordingButtonContainer {
+  margin-bottom: 1.5rem;
+}
+
+.recordingButton {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.recordingButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+}
+
+.recordingButton:active,
+.recordingButton.recording {
+  transform: scale(0.95);
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.recordingButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.recordingInstruction {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.recordingButton.recording {
+  animation: pulse 1.5s infinite;
+}
+
+.recordingButton.disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.recordingButton.disabled:hover {
+  background-color: #94a3b8;
+  transform: none;
+}
+
+.transcriptionContainer {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.transcriptionLabel {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.transcriptionText {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.4;
+  font-style: italic;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #0ea5e9;
+}
+
+@media (max-width: 480px) {
+  .recordingButton {
+    width: 150px;
+    height: 150px;
+    font-size: 1rem;
+  }
+  
+  .transcriptionContainer {
+    margin-top: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .transcriptionText {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+}

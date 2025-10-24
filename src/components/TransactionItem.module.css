@@ -1,0 +1,114 @@
+.transactionItem {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.transactionItem:last-child {
+  border-bottom: none;
+}
+
+.transactionItem:hover {
+  background-color: #f8f9fa;
+}
+
+.transactionInfo {
+  flex: 1;
+}
+
+.transactionDescription {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.transactionDate {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.transactionAmount {
+  margin-left: 1rem;
+}
+
+.amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.amount.income {
+  color: #22c55e;
+}
+
+.amount.expense {
+  color: #ef4444;
+}
+
+/* Botões de ação */
+.actions {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.actions.show {
+  opacity: 1;
+}
+
+.editButton,
+.deleteButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.editButton:hover {
+  background-color: #e3f2fd;
+  transform: scale(1.1);
+}
+
+.deleteButton:hover {
+  background-color: #ffebee;
+  transform: scale(1.1);
+}
+
+.editButton:active,
+.deleteButton:active {
+  transform: scale(0.95);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .transactionItem {
+    padding: 0.75rem 1rem;
+  }
+  
+  .actions {
+    right: 0.5rem;
+  }
+  
+  .editButton,
+  .deleteButton {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+}
