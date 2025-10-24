@@ -149,21 +149,45 @@ export class AudioRecorder implements IAudioRecorder {
 export class SpeechTranscriber implements ISpeechTranscriber {
   private readonly isSupported: boolean;
   private recognition: any = null;
+  private isInitialized: boolean = false;
+  private isRunning: boolean = false;
 
   constructor() {
+    console.log('🎤 Inicializando SpeechTranscriber...');
+    console.log('🔍 Verificando suporte ao Speech Recognition...');
+    
     this.isSupported = typeof window !== 'undefined' && 
       ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window);
     
+    console.log(`📱 Speech Recognition suportado: ${this.isSupported}`);
+    
     if (this.isSupported) {
+      console.log('✅ Suporte detectado, inicializando reconhecimento...');
       this.initializeRecognition();
+    } else {
+      console.log('❌ Speech Recognition não suportado neste navegador');
     }
   }
 
   private initializeRecognition(): void {
+    if (this.isInitialized && this.recognition) {
+      console.log('⚠️ Speech Recognition já inicializado, reutilizando...');
+      return;
+    }
+
+    console.log('🔧 Inicializando Speech Recognition...');
+    
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
+    console.log('🔍 SpeechRecognition disponível:', !!SpeechRecognition);
+    console.log('🔍 webkitSpeechRecognition disponível:', !!(window as any).webkitSpeechRecognition);
+    console.log('🔍 SpeechRecognition disponível:', !!(window as any).SpeechRecognition);
+    
     if (SpeechRecognition) {
+      console.log('✅ Criando instância do Speech Recognition...');
       this.recognition = new SpeechRecognition();
+      
+      console.log('⚙️ Configurando parâmetros...');
       this.recognition.continuous = false;
       this.recognition.interimResults = false;
       this.recognition.lang = 'pt-BR';
@@ -171,9 +195,21 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       
       // Configurações específicas para mobile
       if (this.isMobileDevice()) {
+        console.log('📱 Aplicando configurações mobile...');
         this.recognition.continuous = true; // Melhor para mobile
         this.recognition.interimResults = true; // Mostrar resultados parciais
       }
+      
+      this.isInitialized = true;
+      console.log('✅ Speech Recognition inicializado com sucesso');
+      console.log('📋 Configurações:', {
+        continuous: this.recognition.continuous,
+        interimResults: this.recognition.interimResults,
+        lang: this.recognition.lang,
+        maxAlternatives: this.recognition.maxAlternatives
+      });
+    } else {
+      console.log('❌ Speech Recognition não disponível');
     }
   }
 
@@ -312,15 +348,29 @@ export class SpeechTranscriber implements ISpeechTranscriber {
 
   // Método para transcrição em tempo real (durante a gravação)
   startRealTimeTranscription(onResult: (text: string) => void, onError: (error: Error) => void): void {
+    console.log('🚀 startRealTimeTranscription chamado');
+    console.log('🔍 Verificando suporte:', this.isSupported);
+    console.log('🔍 Recognition disponível:', !!this.recognition);
+    console.log('🔍 Já está rodando:', this.isRunning);
+    
     if (!this.isSupported || !this.recognition) {
+      console.log('❌ Speech Recognition não suportado ou não inicializado');
       onError(new Error('Transcrição em tempo real não suportada'));
+      return;
+    }
+
+    if (this.isRunning) {
+      console.log('⚠️ Transcrição já está rodando, ignorando nova solicitação');
       return;
     }
 
     console.log('🔄 Iniciando transcrição em tempo real...');
     
-    // Reinicializar reconhecimento para garantir configurações corretas
-    this.initializeRecognition();
+    // Garantir que está inicializado, mas não recriar
+    if (!this.isInitialized) {
+      console.log('🔄 Reinicializando reconhecimento...');
+      this.initializeRecognition();
+    }
     
     // Configurações otimizadas para mobile
     this.recognition.continuous = true;
@@ -368,10 +418,12 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     this.recognition.onstart = () => {
       console.log('✅ Transcrição em tempo real iniciada');
       isStarted = true;
+      this.isRunning = true;
     };
 
     this.recognition.onend = () => {
       console.log('⏹️ Transcrição em tempo real finalizada');
+      this.isRunning = false;
       if (accumulatedText) {
         console.log(`📋 Texto final: "${accumulatedText.trim()}"`);
         onResult(accumulatedText.trim());
@@ -380,6 +432,7 @@ export class SpeechTranscriber implements ISpeechTranscriber {
 
     this.recognition.onerror = (event: any) => {
       console.error('❌ Erro na transcrição em tempo real:', event.error);
+      this.isRunning = false;
       
       // Não parar por erros menores em mobile
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
@@ -408,14 +461,28 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       this.recognition.start();
     } catch (error) {
       console.error('❌ Erro ao iniciar transcrição:', error);
+      this.isRunning = false;
       onError(new Error('Erro ao iniciar transcrição em tempo real'));
     }
   }
 
   stopRealTimeTranscription(): void {
-    if (this.recognition) {
-      this.recognition.stop();
+    console.log('⏹️ Parando transcrição em tempo real...');
+    console.log('🔍 Recognition disponível:', !!this.recognition);
+    console.log('🔍 Estava rodando:', this.isRunning);
+    
+    if (this.recognition && this.isRunning) {
+      try {
+        this.recognition.stop();
+        console.log('✅ Transcrição parada com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao parar transcrição:', error);
+      }
+    } else {
+      console.log('⚠️ Nenhuma transcrição ativa para parar');
     }
+    
+    this.isRunning = false;
   }
 
   parseTransaction(text: string): ParsedTransaction {

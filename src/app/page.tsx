@@ -3,6 +3,7 @@
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { PermissionDebug } from '@/components/PermissionDebug';
+import { SpeechTest } from '@/components/SpeechTest';
 import { TranscriptionDebug } from '@/components/TranscriptionDebug';
 import { RecordingButton } from '@/components/RecordingButton';
 import { SummaryCards } from '@/components/SummaryCards';
@@ -14,6 +15,7 @@ export default function Home() {
   const [currentView, setCurrentView] = useState<'record' | 'list'>('record');
   const [showDebug, setShowDebug] = useState(false);
   const [showTranscriptionDebug, setShowTranscriptionDebug] = useState(false);
+  const [showSpeechTest, setShowSpeechTest] = useState(false);
   const {
     isOnline,
     transactions,
@@ -70,6 +72,13 @@ export default function Home() {
                  title="Debug de Transcrição"
                >
                  🎤
+               </button>
+               <button
+                 className={styles.debugButton}
+                 onClick={() => setShowSpeechTest(true)}
+                 title="Teste Simples de Speech"
+               >
+                 🗣️
                </button>
       </nav>
 
@@ -131,6 +140,49 @@ export default function Home() {
         isVisible={showTranscriptionDebug}
         onClose={() => setShowTranscriptionDebug(false)}
       />
+
+      {showSpeechTest && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          zIndex: 2000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '1rem',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowSpeechTest(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+            <SpeechTest />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
