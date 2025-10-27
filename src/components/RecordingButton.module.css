@@ -152,7 +152,7 @@
 /* Logs Container */
 .logsContainer {
   margin-top: 1rem;
-  padding: 1rem;
+  padding: 0.75rem;
   background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -161,39 +161,45 @@
 
 .logsTitle {
   margin: 0 0 0.5rem 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #666;
+  font-weight: 600;
 }
 
 .logsContent {
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.8);
+  overflow-x: hidden;
+  background: rgba(255, 255, 255, 0.9);
   padding: 0.5rem;
   border-radius: 5px;
   margin-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .logEntry {
-  margin: 0.25rem 0;
-  font-size: 0.75rem;
+  margin: 0.3rem 0;
+  font-size: 0.7rem;
   color: #333;
-  font-family: monospace;
-  line-height: 1.4;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.3;
   word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .clearLogsButton {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.6rem;
   background: #ef4444;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   transition: background 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .clearLogsButton:hover {
@@ -202,6 +208,7 @@
 
 .clearLogsButton:active {
   transform: scale(0.98);
+  background: #b91c1c;
 }
 
 @media (max-width: 480px) {
@@ -226,9 +233,34 @@
     padding: 0.75rem;
   }
   
+  .statusContainer p {
+    font-size: 0.85rem;
+    margin: 0.4rem 0;
+  }
+  
   .logsContainer {
     margin-top: 0.75rem;
-    padding: 0.75rem;
-    max-height: 150px;
+    padding: 0.5rem;
+  }
+  
+  .logsTitle {
+    font-size: 0.8rem;
+    margin: 0 0 0.4rem 0;
+  }
+  
+  .logsContent {
+    max-height: 250px;
+    padding: 0.4rem;
+  }
+  
+  .logEntry {
+    font-size: 0.65rem;
+    line-height: 1.25;
+    margin: 0.25rem 0;
+  }
+  
+  .clearLogsButton {
+    padding: 0.5rem;
+    font-size: 0.75rem;
   }
 }

@@ -177,12 +177,12 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
 
       {/* Logs de Debug */}
       <div className={styles.logsContainer}>
-        <h3 className={styles.logsTitle}>📋 Logs de Debug:</h3>
+        <h3 className={styles.logsTitle}>📋 Logs de Debug ({logs.length}):</h3>
         <div className={styles.logsContent}>
           {logs.length === 0 ? (
             <div className={styles.logEntry}>Nenhum log ainda...</div>
           ) : (
-            logs.slice(-15).map((log, index) => (
+            logs.slice(-30).map((log, index) => (
               <div key={index} className={styles.logEntry}>
                 {log}
               </div>

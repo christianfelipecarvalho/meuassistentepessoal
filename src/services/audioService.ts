@@ -346,6 +346,7 @@ export class SpeechTranscriber implements ISpeechTranscriber {
   // ABORDAGEM SIMPLIFICADA - Igual ao SpeechTest que funciona perfeitamente
   startRealTimeTranscription(onResult: (text: string) => void, onError: (error: Error) => void): void {
     console.log('🚀 startRealTimeTranscription chamado');
+    console.log('📱 User Agent:', navigator.userAgent);
     
     if (!this.isSupported) {
       console.log('❌ Speech Recognition não suportado');
@@ -361,6 +362,10 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     console.log('🔧 Criando instância do Speech Recognition...');
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
+    console.log('🔍 SpeechRecognition:', !!SpeechRecognition);
+    console.log('🔍 webkitSpeechRecognition:', !!(window as any).webkitSpeechRecognition);
+    console.log('🔍 SpeechRecognition (standard):', !!(window as any).SpeechRecognition);
+    
     if (!SpeechRecognition) {
       console.log('❌ Speech Recognition não disponível');
       onError(new Error('Speech Recognition não disponível'));
@@ -368,35 +373,46 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     }
     
     // Criar nova instância (mesma abordagem do SpeechTest)
+    console.log('🏗️ Criando nova instância...');
     this.recognition = new SpeechRecognition();
+    console.log('✅ Instância criada:', !!this.recognition);
     
     // Configurações simples (mesma abordagem do SpeechTest)
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
     this.recognition.lang = 'pt-BR';
     
-    console.log('⚙️ Configurações aplicadas');
-    console.log(`Idioma: ${this.recognition.lang}`);
-    console.log(`Contínuo: ${this.recognition.continuous}`);
-    console.log(`Resultados interim: ${this.recognition.interimResults}`);
+    console.log('⚙️ Configurações aplicadas:');
+    console.log(`  - Idioma: ${this.recognition.lang}`);
+    console.log(`  - Contínuo: ${this.recognition.continuous}`);
+    console.log(`  - Resultados interim: ${this.recognition.interimResults}`);
 
     let accumulatedText = '';
+    let eventCount = 0;
 
     // Configurar eventos ANTES de iniciar (mesma abordagem do SpeechTest)
+    console.log('⚙️ Configurando eventos...');
+    
     this.recognition.onstart = () => {
-      console.log('✅ Escuta iniciada');
+      console.log('✅✅✅ EVENTO onstart disparado! Escuta iniciada!');
       this.isRunning = true;
     };
 
     this.recognition.onresult = (event: any) => {
-      console.log(`📝 Resultado recebido (${event.results.length} resultados)`);
+      eventCount++;
+      console.log(`📝📝📝 EVENTO onresult #${eventCount} disparado!`);
+      console.log(`   Total de resultados: ${event.results.length}`);
+      console.log(`   Result index: ${event.resultIndex}`);
       
       let finalTranscript = '';
       let interimTranscript = '';
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
+        const isFinal = event.results[i].isFinal;
+        console.log(`   Resultado [${i}]: "${transcript}" (final: ${isFinal})`);
+        
+        if (isFinal) {
           finalTranscript += transcript;
         } else {
           interimTranscript += transcript;
@@ -404,19 +420,24 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       }
 
       if (finalTranscript) {
-        console.log(`✅ Final: "${finalTranscript}"`);
+        console.log(`✅✅✅ FINAL: "${finalTranscript}"`);
         accumulatedText += finalTranscript + ' ';
+        console.log(`   Texto acumulado: "${accumulatedText.trim()}"`);
         onResult(accumulatedText.trim());
       }
       
       if (interimTranscript) {
-        console.log(`🔄 Interim: "${interimTranscript}"`);
-        onResult((accumulatedText + interimTranscript).trim());
+        console.log(`🔄🔄🔄 INTERIM: "${interimTranscript}"`);
+        const currentText = (accumulatedText + interimTranscript).trim();
+        console.log(`   Texto atual: "${currentText}"`);
+        onResult(currentText);
       }
     };
 
     this.recognition.onerror = (event: any) => {
-      console.log(`❌ Erro: ${event.error}`);
+      console.log(`❌❌❌ EVENTO onerror disparado!`);
+      console.log(`   Erro: ${event.error}`);
+      console.log(`   Mensagem: ${event.message || 'N/A'}`);
       this.isRunning = false;
       
       // Ignorar erros menores
@@ -429,15 +450,44 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     };
 
     this.recognition.onend = () => {
-      console.log('⏹️ Escuta finalizada');
+      console.log('⏹️⏹️⏹️ EVENTO onend disparado! Escuta finalizada');
+      console.log(`   Total de eventos onresult recebidos: ${eventCount}`);
       this.isRunning = false;
     };
 
+    this.recognition.onaudiostart = () => {
+      console.log('🎵 EVENTO onaudiostart disparado!');
+    };
+
+    this.recognition.onsoundstart = () => {
+      console.log('🔊 EVENTO onsoundstart disparado!');
+    };
+
+    this.recognition.onspeechstart = () => {
+      console.log('🗣️ EVENTO onspeechstart disparado!');
+    };
+
+    this.recognition.onspeechend = () => {
+      console.log('🤐 EVENTO onspeechend disparado!');
+    };
+
+    this.recognition.onsoundend = () => {
+      console.log('🔇 EVENTO onsoundend disparado!');
+    };
+
+    this.recognition.onaudioend = () => {
+      console.log('🎵 EVENTO onaudioend disparado!');
+    };
+
+    console.log('✅ Todos os eventos configurados');
+
     try {
-      console.log('🚀 recognition.start() chamado');
+      console.log('🚀🚀🚀 Chamando recognition.start()...');
       this.recognition.start();
+      console.log('✅✅✅ recognition.start() chamado com sucesso! Aguardando eventos...');
     } catch (error) {
-      console.log(`❌ Erro ao iniciar: ${error}`);
+      console.log(`❌❌❌ Erro ao iniciar: ${error}`);
+      console.error('Detalhes do erro:', error);
       this.isRunning = false;
       onError(new Error('Erro ao iniciar transcrição em tempo real'));
     }
