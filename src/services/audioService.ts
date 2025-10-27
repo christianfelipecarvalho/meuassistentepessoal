@@ -547,21 +547,88 @@ export class SpeechTranscriber implements ISpeechTranscriber {
 
   private extractAmount(text: string): number {
     console.log(`Tentando extrair valor de: "${text}"`);
+    const lowerText = text.toLowerCase();
     
-    // Padrões para detectar valores monetários - mais robustos
+    // 1. PRIMEIRO: Detectar números com "mil", "milhão", "bilhão"
+    // Ex: "5 mil reais", "10 mil", "2.5 milhões"
+    const milharesPatterns = [
+      // Padrão: número + mil + opcional centavos
+      /(\d+(?:[.,]\d+)?)\s*mil(?:\s+e\s+(\d+)\s*centavos)?/gi,
+      /(\d+(?:[.,]\d+)?)\s*milhão(?:ões)?/gi,
+      /(\d+(?:[.,]\d+)?)\s*bilhão(?:ões)?/gi
+    ];
+
+    for (const pattern of milharesPatterns) {
+      const match = pattern.exec(lowerText);
+      if (match) {
+        // Normalizar formato BR: remover pontos, trocar vírgula por ponto
+        const normalizedBase = match[1].replace(/\./g, '').replace(',', '.');
+        const baseNumber = parseFloat(normalizedBase);
+        const centavos = match[2] ? parseInt(match[2]) / 100 : 0;
+        
+        let multiplier = 1;
+        if (lowerText.includes('mil')) {
+          multiplier = 1000;
+        } else if (lowerText.includes('milhão') || lowerText.includes('milhões')) {
+          multiplier = 1000000;
+        } else if (lowerText.includes('bilhão') || lowerText.includes('bilhões')) {
+          multiplier = 1000000000;
+        }
+        
+        const amount = (baseNumber * multiplier) + centavos;
+        console.log(`✅ Valor com multiplicador detectado: ${amount} (base: ${baseNumber}, multiplicador: ${multiplier}, centavos: ${centavos})`);
+        return amount;
+      }
+    }
+
+    // 2. SEGUNDO: Detectar valores com centavos por extenso
+    // Ex: "10 reais e 50 centavos", "10.800 reais e 20 centavos"
+    const centavosPattern = /(\d+(?:[.,]\d+)?)\s*(?:reais?|r\$)?\s*(?:e|com)?\s*(\d+)\s*centavos?/gi;
+    const centavosMatch = centavosPattern.exec(lowerText);
+    if (centavosMatch) {
+      // Normalizar formato BR: remover pontos, trocar vírgula por ponto
+      const normalizedReais = centavosMatch[1].replace(/\./g, '').replace(',', '.');
+      const reais = parseFloat(normalizedReais);
+      const centavos = parseInt(centavosMatch[2]) / 100;
+      const amount = reais + centavos;
+      console.log(`✅ Valor com centavos detectado: ${amount} (reais: ${reais}, centavos: ${centavos})`);
+      return amount;
+    }
+
+    // 3. TERCEIRO: Detectar números grandes sem separador (ex: "5000", "10000")
+    // Assumir que são milhares se >= 1000
+    const numberPattern = /(\d{4,})/g;
+    const bigNumberMatch = numberPattern.exec(text);
+    if (bigNumberMatch) {
+      const amount = parseInt(bigNumberMatch[1]);
+      if (amount >= 1000 && amount < 1000000) {
+        console.log(`✅ Número grande detectado: ${amount}`);
+        return amount;
+      }
+    }
+
+    // 4. QUARTO: Padrões normais com decimais
+    // Ex: "R$ 10,50", "10.50 reais", "gastei 50"
     const patterns = [
       // Padrões específicos com "reais"
-      /(\d+(?:[.,]\d+)?)\s*(?:reais?|r\$|rs|real)/gi,
-      /r\$\s*(\d+(?:[.,]\d+)?)/gi,
+      /(\d+[.,]\d{1,2})\s*(?:reais?|r\$|rs|real)/gi,
+      /r\$\s*(\d+[.,]\d{1,2})/gi,
+      
+      // Padrões com palavras-chave monetárias + decimais
+      /(?:gastei|paguei|comprei|recebi|ganhei)\s*(?:de\s*)?(\d+[.,]\d{1,2})/gi,
+      
+      // Números com vírgula/ponto (centavos)
+      /(\d+[.,]\d{1,2})/g,
+      
+      // Padrões com "reais" (inteiros)
+      /(\d+)\s*(?:reais?|r\$|rs|real)/gi,
+      /r\$\s*(\d+)/gi,
       
       // Padrões com palavras-chave monetárias
-      /(?:gastei|paguei|comprei|recebi|ganhei)\s*(?:de\s*)?(\d+(?:[.,]\d+)?)/gi,
+      /(?:gastei|paguei|comprei|recebi|ganhei)\s*(?:de\s*)?(\d+)/gi,
       
-      // Padrões com "de" (ex: "gastei de 50 reais")
-      /(?:de\s*)(\d+(?:[.,]\d+)?)/gi,
-      
-      // Padrões simples de números
-      /(\d+(?:[.,]\d+)?)/g
+      // Padrões simples de números inteiros
+      /(\d+)/g
     ];
 
     // Tentar cada padrão em ordem de prioridade
@@ -572,12 +639,16 @@ export class SpeechTranscriber implements ISpeechTranscriber {
           // Extrair apenas números, vírgulas e pontos
           const amountStr = match.replace(/[^\d.,]/g, '');
           if (amountStr) {
-            // Converter vírgula para ponto
-            const normalizedAmount = amountStr.replace(',', '.');
+            // Normalizar formato BR para formato JS
+            // Ex: "10.800,20" → "10800.20"
+            // 1. Remover pontos (separadores de milhar)
+            // 2. Substituir vírgula por ponto (separador decimal)
+            let normalizedAmount = amountStr.replace(/\./g, ''); // Remove pontos
+            normalizedAmount = normalizedAmount.replace(',', '.'); // Vírgula → ponto
             const amount = parseFloat(normalizedAmount);
             
-            if (!isNaN(amount) && amount > 0 && amount < 1000000) { // Limite razoável
-              console.log(`✅ Valor detectado: ${amount} de "${match}"`);
+            if (!isNaN(amount) && amount > 0 && amount < 10000000) { // Limite de 10 milhões
+              console.log(`✅ Valor detectado: ${amount} de "${match}" (original: "${amountStr}")`);
               return amount;
             }
           }
@@ -588,7 +659,6 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     console.log(`❌ Nenhum valor detectado em: "${text}"`);
     
     // Se não conseguir detectar valor, retorna um valor padrão baseado no contexto
-    const lowerText = text.toLowerCase();
     if (lowerText.includes('gastei') || lowerText.includes('paguei') || lowerText.includes('comprei')) {
       console.log(`⚠️ Usando valor padrão para gasto: 1`);
       return 1; // Valor mínimo para gastos

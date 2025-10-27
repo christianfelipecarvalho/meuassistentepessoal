@@ -1,6 +1,6 @@
-import { formatCurrency, formatDate } from '@/lib/audioService';
 import { Transaction } from '@/types';
-import React, { useState } from 'react';
+import { formatCurrency, formatDate } from '@/utils';
+import React from 'react';
 import styles from './TransactionItem.module.css';
 
 interface TransactionItemProps {

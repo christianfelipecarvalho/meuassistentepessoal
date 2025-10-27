@@ -2,6 +2,20 @@ import { FORMAT_CONSTANTS, VALIDATION_RULES } from '@/constants';
 import { Money } from '@/domain';
 import { Transaction } from '@/types';
 
+/**
+ * Barrel export para utilitários
+ * Facilita importações e mantém código organizado
+ */
+
+// Re-export formatters
+export { formatCurrency, formatDate, formatRelativeDate } from './formatters';
+
+// Re-export logger
+export { Logger, createLogger } from './logger';
+
+// Import para uso interno
+import { formatCurrency, formatDate, formatRelativeDate } from './formatters';
+
 // Utility classes seguindo Single Responsibility Principle
 
 export class ValidationUtils {
@@ -43,57 +57,15 @@ export class ValidationUtils {
   }
 }
 
+// FormatUtils foi movido para ./formatters.ts e exportado como funções standalone
+// Mantido aqui apenas para compatibilidade com código legado
 export class FormatUtils {
-  static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat(FORMAT_CONSTANTS.CURRENCY_LOCALE, {
-      style: 'currency',
-      currency: FORMAT_CONSTANTS.CURRENCY_CODE
-    }).format(amount);
-  }
-
-  static formatDate(date: Date, format: 'short' | 'long' | 'time' = 'long'): string {
-    const options: Intl.DateTimeFormatOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    };
-
-    if (format === 'long') {
-      options.hour = '2-digit';
-      options.minute = '2-digit';
-    } else if (format === 'time') {
-      options.hour = '2-digit';
-      options.minute = '2-digit';
-      delete options.day;
-      delete options.month;
-      delete options.year;
-    }
-
-    return new Intl.DateTimeFormat(FORMAT_CONSTANTS.DATE_LOCALE, options).format(date);
-  }
-
-  static formatRelativeDate(date: Date): string {
-    const now = new Date();
-    const diffInMs = now.getTime() - date.getTime();
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
-
-    if (diffInMinutes < 1) {
-      return 'Agora mesmo';
-    }
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} min atrás`;
-    }
-    if (diffInHours < 24) {
-      return `${diffInHours}h atrás`;
-    }
-    if (diffInDays < 7) {
-      return `${diffInDays} dias atrás`;
-    }
-    
-    return this.formatDate(date, 'short');
-  }
+  /** @deprecated Use formatCurrency from '@/utils' instead */
+  static formatCurrency = formatCurrency;
+  /** @deprecated Use formatDate from '@/utils' instead */
+  static formatDate = formatDate;
+  /** @deprecated Use formatRelativeDate from '@/utils' instead */
+  static formatRelativeDate = formatRelativeDate;
 }
 
 export class CalculationUtils {

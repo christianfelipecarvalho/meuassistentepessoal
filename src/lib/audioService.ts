@@ -157,21 +157,7 @@ export class SpeechTranscriber {
   }
 }
 
-// Função utilitária para formatar moeda
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(amount);
-};
-
-// Função utilitária para formatar data
-export const formatDate = (date: Date): string => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
-};
+// DEPRECATED: Essas funções foram movidas para @/utils/formatters
+// Mantidas aqui apenas para compatibilidade com código legado
+// TODO: Remover após migração completa
+export { formatCurrency, formatDate } from '@/utils';

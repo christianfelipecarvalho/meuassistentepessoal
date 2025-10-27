@@ -1,6 +1,6 @@
-import React from 'react';
 import { Transaction } from '@/types';
-import { formatCurrency } from '@/lib/audioService';
+import { formatCurrency } from '@/utils';
+import React from 'react';
 import styles from './SummaryCards.module.css';
 
 interface SummaryCardsProps {

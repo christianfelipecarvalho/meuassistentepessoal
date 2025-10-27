@@ -1,5 +1,5 @@
-import { formatCurrency } from '@/lib/audioService';
 import { Category, Transaction } from '@/types';
+import { formatCurrency } from '@/utils';
 import React from 'react';
 import styles from './CategorySection.module.css';
 import { TransactionItem } from './TransactionItem';

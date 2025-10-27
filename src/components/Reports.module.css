@@ -1,0 +1,331 @@
+.reportsContainer {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+  text-transform: capitalize;
+  margin-bottom: 2rem;
+}
+
+/* Summary Grid */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summaryCard {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.summaryCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.summaryCard.income {
+  border-left: 4px solid #22c55e;
+}
+
+.summaryCard.expense {
+  border-left: 4px solid #ef4444;
+}
+
+.summaryCard.balance {
+  border-left: 4px solid #3b82f6;
+}
+
+.summaryCard.positive {
+  border-left-color: #22c55e;
+}
+
+.summaryCard.negative {
+  border-left-color: #ef4444;
+}
+
+.cardIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.cardContent {
+  flex: 1;
+}
+
+.cardContent h3 {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.cardAmount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.cardDetail {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Charts Grid */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chartCard {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chartTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Category List */
+.categoryList {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f3f4;
+}
+
+.categoryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.categoryItem:last-child {
+  border-bottom: none;
+}
+
+.categoryInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.categoryDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.categoryName {
+  font-size: 0.95rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.categoryValues {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.categoryAmount {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.categoryPercent {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Analysis Card */
+.analysisCard {
+  background: white;
+  border-radius: 15px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.analysisTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.analysisList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analysisItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.analysisLabel {
+  font-size: 0.95rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.analysisValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.analysisValue.positive {
+  color: #22c55e;
+}
+
+.analysisValue.negative {
+  color: #ef4444;
+}
+
+/* Empty State */
+.emptyState {
+  background: white;
+  border-radius: 15px;
+  padding: 4rem 2rem;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin: 2rem 0;
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.emptyState p {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reportsContainer {
+    padding: 0.75rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .summaryCard {
+    padding: 1rem;
+  }
+
+  .cardIcon {
+    font-size: 2.5rem;
+  }
+
+  .cardAmount {
+    font-size: 1.3rem;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chartCard {
+    padding: 1rem;
+  }
+
+  .categoryItem {
+    padding: 0.5rem 0;
+  }
+
+  .categoryName {
+    font-size: 0.9rem;
+  }
+
+  .categoryAmount {
+    font-size: 0.95rem;
+  }
+
+  .analysisCard {
+    padding: 1rem;
+  }
+
+  .analysisItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.3rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .cardAmount {
+    font-size: 1.1rem;
+  }
+
+  .cardContent h3 {
+    font-size: 0.85rem;
+  }
+
+  .chartTitle {
+    font-size: 1.1rem;
+  }
+}
+

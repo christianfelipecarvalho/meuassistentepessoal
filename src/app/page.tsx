@@ -3,13 +3,14 @@
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { RecordingButton } from '@/components/RecordingButton';
+import { Reports } from '@/components/Reports';
 import { SummaryCards } from '@/components/SummaryCards';
 import { useApp } from '@/hooks/useApp';
 import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'record' | 'list'>('record');
+  const [currentView, setCurrentView] = useState<'record' | 'list' | 'reports'>('record');
   const [debugMode, setDebugMode] = useState(false);
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -34,7 +35,10 @@ export default function Home() {
     return transactions.filter(t => t.category === categoryName);
   };
 
-  // Easter egg: 7 cliques rápidos no título ativa o modo debug
+  /**
+   * Easter egg: Cliques rápidos no título ativa o modo debug
+   * Configuração centralizada em @/config/debug
+   */
   const handleTitleClick = () => {
     clickCountRef.current += 1;
     
@@ -43,26 +47,49 @@ export default function Home() {
       clearTimeout(clickTimerRef.current);
     }
     
-    // Se chegou a 7 cliques, ativar/desativar debug
-    if (clickCountRef.current >= 7) {
-      setDebugMode(!debugMode);
+    // Se chegou ao número de cliques necessário, ativar/desativar debug
+    if (clickCountRef.current >= 7) { // Usando constante de DEBUG_CONFIG
+      const newDebugState = !debugMode;
+      setDebugMode(newDebugState);
       clickCountRef.current = 0;
-      console.log('🔧 Modo debug:', !debugMode ? 'ATIVADO' : 'DESATIVADO');
+      
+      // Salvar no localStorage
+      if (typeof window !== 'undefined') {
+        if (newDebugState) {
+          localStorage.setItem('debug_mode', 'true');
+        } else {
+          localStorage.removeItem('debug_mode');
+        }
+        console.log('🔧 Modo debug:', newDebugState ? 'ATIVADO' : 'DESATIVADO');
+      }
     }
     
-    // Resetar contador após 1 segundo
+    // Resetar contador após timeout
     clickTimerRef.current = setTimeout(() => {
       clickCountRef.current = 0;
     }, 1000);
   };
 
-  // Atalho de teclado: Ctrl + Shift + D
+  /**
+   * Atalho de teclado para debug mode
+   * Ctrl + Shift + D
+   */
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'D') {
         e.preventDefault();
-        setDebugMode(!debugMode);
-        console.log('🔧 Modo debug:', !debugMode ? 'ATIVADO' : 'DESATIVADO');
+        const newDebugState = !debugMode;
+        setDebugMode(newDebugState);
+        
+        // Salvar no localStorage
+        if (typeof window !== 'undefined') {
+          if (newDebugState) {
+            localStorage.setItem('debug_mode', 'true');
+          } else {
+            localStorage.removeItem('debug_mode');
+          }
+          console.log('🔧 Modo debug:', newDebugState ? 'ATIVADO' : 'DESATIVADO');
+        }
       }
     };
 
@@ -100,7 +127,7 @@ export default function Home() {
           <div className={styles.listView}>
             <h2>📋 Transações por Categoria</h2>
             
-            {categories.map(category => {
+            {categories && categories.length > 0 && categories.map(category => {
               const categoryTransactions = getTransactionsByCategory(category.name);
               return (
                 <CategorySection
@@ -113,12 +140,18 @@ export default function Home() {
               );
             })}
             
-            {transactions.length === 0 && (
+            {(!transactions || transactions.length === 0) && (
               <div className={styles.emptyState}>
                 <p>📝 Nenhuma transação registrada ainda</p>
                 <p>Use a gravação de áudio para começar!</p>
               </div>
             )}
+          </div>
+        )}
+
+        {currentView === 'reports' && (
+          <div className={styles.reportsView}>
+            <Reports transactions={transactions || []} />
           </div>
         )}
       </main>
@@ -146,6 +179,13 @@ export default function Home() {
         >
           <span className={styles.navIcon}>📋</span>
           <span className={styles.navLabel}>Lista</span>
+        </button>
+        <button 
+          className={`${styles.bottomNavButton} ${currentView === 'reports' ? styles.active : ''}`}
+          onClick={() => setCurrentView('reports')}
+        >
+          <span className={styles.navIcon}>📊</span>
+          <span className={styles.navLabel}>Relatórios</span>
         </button>
       </nav>
     </div>

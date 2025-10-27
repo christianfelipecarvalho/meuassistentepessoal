@@ -152,6 +152,11 @@
   font-size: 1.3rem;
 }
 
+/* Reports View */
+.reportsView {
+  width: 100%;
+}
+
 /* Empty State */
 .emptyState {
   background: rgba(255, 255, 255, 0.95);
