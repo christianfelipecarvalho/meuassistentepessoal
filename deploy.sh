@@ -28,7 +28,7 @@ fi
 
 # Deploy para Vercel
 echo "🌐 Fazendo deploy para Vercel..."
-vercel --prod
+vercel --prod --yes
 
 if [ $? -eq 0 ]; then
     echo "✅ Deploy concluído com sucesso!"

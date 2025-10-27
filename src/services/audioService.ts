@@ -343,66 +343,53 @@ export class SpeechTranscriber implements ISpeechTranscriber {
   }
 
   // Método para transcrição em tempo real (durante a gravação)
+  // ABORDAGEM SIMPLIFICADA - Igual ao SpeechTest que funciona perfeitamente
   startRealTimeTranscription(onResult: (text: string) => void, onError: (error: Error) => void): void {
-    console.log('🚀 [BOTÃO PRINCIPAL] startRealTimeTranscription chamado');
-    console.log('🔍 [BOTÃO PRINCIPAL] Verificando suporte:', this.isSupported);
-    console.log('🔍 [BOTÃO PRINCIPAL] Recognition disponível:', !!this.recognition);
-    console.log('🔍 [BOTÃO PRINCIPAL] Já está rodando:', this.isRunning);
+    console.log('🚀 startRealTimeTranscription chamado');
     
     if (!this.isSupported) {
-      console.log('❌ [BOTÃO PRINCIPAL] Speech Recognition não suportado');
+      console.log('❌ Speech Recognition não suportado');
       onError(new Error('Transcrição em tempo real não suportada'));
       return;
     }
 
     if (this.isRunning) {
-      console.log('⚠️ [BOTÃO PRINCIPAL] Transcrição já está rodando, ignorando nova solicitação');
+      console.log('⚠️ Transcrição já está rodando, ignorando');
       return;
     }
 
-    console.log('🔄 [BOTÃO PRINCIPAL] Iniciando transcrição em tempo real...');
-    
-    // SEMPRE criar uma nova instância para evitar problemas de estado (igual ao SpeechTest)
-    console.log('🔧 [BOTÃO PRINCIPAL] Criando nova instância do Speech Recognition...');
+    console.log('🔧 Criando instância do Speech Recognition...');
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      console.log('❌ [BOTÃO PRINCIPAL] Speech Recognition não disponível');
+      console.log('❌ Speech Recognition não disponível');
       onError(new Error('Speech Recognition não disponível'));
       return;
     }
     
-    // Criar nova instância sempre
+    // Criar nova instância (mesma abordagem do SpeechTest)
     this.recognition = new SpeechRecognition();
     
-    console.log('⚙️ [BOTÃO PRINCIPAL] Configurando nova instância...');
+    // Configurações simples (mesma abordagem do SpeechTest)
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
     this.recognition.lang = 'pt-BR';
     
-    // Configurações específicas para mobile
-    if (this.isMobileDevice()) {
-      this.recognition.maxAlternatives = 3;
-      console.log('📱 [BOTÃO PRINCIPAL] Configurações mobile aplicadas');
-    }
-    
-    console.log('⚙️ [BOTÃO PRINCIPAL] Configurações aplicadas');
+    console.log('⚙️ Configurações aplicadas');
     console.log(`Idioma: ${this.recognition.lang}`);
     console.log(`Contínuo: ${this.recognition.continuous}`);
     console.log(`Resultados interim: ${this.recognition.interimResults}`);
 
     let accumulatedText = '';
-    let isStarted = false;
 
-    // Configurar eventos ANTES de iniciar (igual ao SpeechTest)
+    // Configurar eventos ANTES de iniciar (mesma abordagem do SpeechTest)
     this.recognition.onstart = () => {
-      console.log('✅ [BOTÃO PRINCIPAL] Escuta iniciada');
-      isStarted = true;
+      console.log('✅ Escuta iniciada');
       this.isRunning = true;
     };
 
     this.recognition.onresult = (event: any) => {
-      console.log(`📝 [BOTÃO PRINCIPAL] Resultado recebido (${event.results.length} resultados)`);
+      console.log(`📝 Resultado recebido (${event.results.length} resultados)`);
       
       let finalTranscript = '';
       let interimTranscript = '';
@@ -417,41 +404,24 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       }
 
       if (finalTranscript) {
-        console.log(`✅ [BOTÃO PRINCIPAL] Final: "${finalTranscript}"`);
+        console.log(`✅ Final: "${finalTranscript}"`);
         accumulatedText += finalTranscript + ' ';
-        console.log(`✅ [BOTÃO PRINCIPAL] Texto acumulado: "${accumulatedText.trim()}"`);
         onResult(accumulatedText.trim());
       }
       
       if (interimTranscript) {
-        console.log(`🔄 [BOTÃO PRINCIPAL] Interim: "${interimTranscript}"`);
-        // Mostrar texto acumulado + interim
-        const currentText = (accumulatedText + interimTranscript).trim();
-        console.log(`🔄 [BOTÃO PRINCIPAL] Texto atual: "${currentText}"`);
-        onResult(currentText);
+        console.log(`🔄 Interim: "${interimTranscript}"`);
+        onResult((accumulatedText + interimTranscript).trim());
       }
     };
 
     this.recognition.onerror = (event: any) => {
-      console.log(`❌ [BOTÃO PRINCIPAL] Erro: ${event.error}`);
+      console.log(`❌ Erro: ${event.error}`);
       this.isRunning = false;
       
-      // Não parar por erros menores em mobile
+      // Ignorar erros menores
       if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        console.log('⚠️ [BOTÃO PRINCIPAL] Erro menor ignorado:', event.error);
-        return;
-      }
-      
-      // Se não conseguiu iniciar, tentar novamente após um delay
-      if (!isStarted && (event.error === 'not-allowed' || event.error === 'service-not-allowed')) {
-        console.log('🔄 [BOTÃO PRINCIPAL] Tentando reiniciar após erro de permissão...');
-        setTimeout(() => {
-          try {
-            this.recognition.start();
-          } catch (error) {
-            console.error('❌ [BOTÃO PRINCIPAL] Erro ao reiniciar:', error);
-          }
-        }, 1000);
+        console.log('⚠️ Erro menor ignorado:', event.error);
         return;
       }
       
@@ -459,38 +429,32 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     };
 
     this.recognition.onend = () => {
-      console.log('⏹️ [BOTÃO PRINCIPAL] Escuta finalizada');
+      console.log('⏹️ Escuta finalizada');
       this.isRunning = false;
-      if (accumulatedText) {
-        console.log(`📋 [BOTÃO PRINCIPAL] Texto final: "${accumulatedText.trim()}"`);
-        onResult(accumulatedText.trim());
-      }
     };
 
     try {
-      console.log('🚀 [BOTÃO PRINCIPAL] recognition.start() chamado');
+      console.log('🚀 recognition.start() chamado');
       this.recognition.start();
     } catch (error) {
-      console.log(`❌ [BOTÃO PRINCIPAL] Erro ao iniciar: ${error}`);
+      console.log(`❌ Erro ao iniciar: ${error}`);
       this.isRunning = false;
       onError(new Error('Erro ao iniciar transcrição em tempo real'));
     }
   }
 
   stopRealTimeTranscription(): void {
-    console.log('⏹️ [BOTÃO PRINCIPAL] Parando transcrição em tempo real...');
-    console.log('🔍 [BOTÃO PRINCIPAL] Recognition disponível:', !!this.recognition);
-    console.log('🔍 [BOTÃO PRINCIPAL] Estava rodando:', this.isRunning);
+    console.log('⏹️ Parando transcrição...');
     
     if (this.recognition && this.isRunning) {
       try {
         this.recognition.stop();
-        console.log('✅ [BOTÃO PRINCIPAL] Transcrição parada com sucesso');
+        console.log('✅ Transcrição parada');
       } catch (error) {
-        console.error('❌ [BOTÃO PRINCIPAL] Erro ao parar transcrição:', error);
+        console.error('❌ Erro ao parar:', error);
       }
     } else {
-      console.log('⚠️ [BOTÃO PRINCIPAL] Nenhuma transcrição ativa para parar');
+      console.log('⚠️ Nenhuma transcrição ativa');
     }
     
     this.isRunning = false;
