@@ -11,6 +11,11 @@ interface RecordingButtonProps {
   permissionsGranted?: boolean;
 }
 
+const addLog = (message: string, logs: string[], setLogs: React.Dispatch<React.SetStateAction<string[]>>) => {
+  const timestamp = new Date().toLocaleTimeString();
+  setLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+};
+
 export const RecordingButton: React.FC<RecordingButtonProps> = ({
   recordingState,
   currentTranscription,
@@ -19,39 +24,67 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
   permissionsGranted = true
 }) => {
   const [isSupported, setIsSupported] = useState(false);
+  const [logs, setLogs] = useState<string[]>([]);
 
   const checkSupport = () => {
+    addLog('🔍 Verificando suporte ao Speech Recognition...', logs, setLogs);
     const hasWebkit = !!(window as any).webkitSpeechRecognition;
     const hasStandard = !!(window as any).SpeechRecognition;
+    addLog(`webkitSpeechRecognition: ${hasWebkit}`, logs, setLogs);
+    addLog(`SpeechRecognition: ${hasStandard}`, logs, setLogs);
     const supported = hasWebkit || hasStandard;
     setIsSupported(supported);
+    addLog(supported ? '✅ Speech Recognition suportado!' : '❌ Speech Recognition NÃO suportado', logs, setLogs);
   };
 
   // Verificar suporte automaticamente ao montar o componente
   useEffect(() => {
     checkSupport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Adicionar log quando a transcrição mudar
+  useEffect(() => {
+    if (currentTranscription) {
+      addLog(`📝 Transcrição recebida: "${currentTranscription}"`, logs, setLogs);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTranscription]);
+
+  // Adicionar log quando o estado de gravação mudar
+  useEffect(() => {
+    if (recordingState.isRecording) {
+      addLog('🔴 Gravação ATIVA', logs, setLogs);
+    } else if (recordingState.isProcessing) {
+      addLog('⏳ Processando...', logs, setLogs);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recordingState.isRecording, recordingState.isProcessing]);
 
   const handleClick = () => {
     if (!permissionsGranted) {
       // Se não tem permissão, solicitar imediatamente
+      addLog('❌ Permissão de microfone não concedida', logs, setLogs);
       requestMicrophonePermission();
       return;
     }
     
     // Verificar suporte primeiro
     if (!isSupported) {
+      addLog('⚠️ Verificando suporte...', logs, setLogs);
       checkSupport();
       return;
     }
     
     if (!recordingState.isRecording) {
       // Usar o sistema principal do useApp em vez do sistema local
+      addLog('🎤 Iniciando gravação...', logs, setLogs);
       if (onStartRecording) {
         onStartRecording();
       }
     } else {
       // Usar o sistema principal do useApp em vez do sistema local
+      addLog('⏹️ Parando gravação...', logs, setLogs);
       if (onStopRecording) {
         onStopRecording();
       }
@@ -140,6 +173,28 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
         <p>Transcrição: <span className={styles.currentTranscript}>
           {currentTranscription || 'N/A'}
         </span></p>
+      </div>
+
+      {/* Logs de Debug */}
+      <div className={styles.logsContainer}>
+        <h3 className={styles.logsTitle}>📋 Logs de Debug:</h3>
+        <div className={styles.logsContent}>
+          {logs.length === 0 ? (
+            <div className={styles.logEntry}>Nenhum log ainda...</div>
+          ) : (
+            logs.slice(-15).map((log, index) => (
+              <div key={index} className={styles.logEntry}>
+                {log}
+              </div>
+            ))
+          )}
+        </div>
+        <button 
+          className={styles.clearLogsButton} 
+          onClick={() => setLogs([])}
+        >
+          🗑️ Limpar Logs
+        </button>
       </div>
     </div>
   );
