@@ -28,6 +28,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
   const [recognition, setRecognition] = useState<any>(null);
   const [isListening, setIsListening] = useState(false);
   const [localTranscript, setLocalTranscript] = useState('');
+  const transcriptRef = React.useRef('');
 
   const checkSupport = () => {
     addLog('🔍 Verificando suporte ao Speech Recognition...', logs, setLogs);
@@ -72,6 +73,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
 
     // Resetar transcrição local
     setLocalTranscript('');
+    transcriptRef.current = '';
 
     recognition.onstart = () => {
       addLog('✅ Escuta iniciada', logs, setLogs);
@@ -120,6 +122,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       }
       
       setLocalTranscript(completeText);
+      transcriptRef.current = completeText; // Atualizar ref para uso no onend
       addLog(`📺 Texto exibido: "${completeText}"`, logs, setLogs);
     };
 
@@ -128,9 +131,39 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       setIsListening(false);
     };
 
-    recognition.onend = () => {
-      addLog('⏹️ Escuta finalizada', logs, setLogs);
+    recognition.onend = async () => {
+      addLog('⏹️ Escuta finalizada (evento onend)', logs, setLogs);
       setIsListening(false);
+      
+      // Salvar automaticamente quando o recognition parar (usando ref)
+      const finalText = transcriptRef.current.trim();
+      addLog(`📋 Texto capturado: "${finalText}" (${finalText.length} caracteres)`, logs, setLogs);
+      
+      if (finalText && finalText.length > 0) {
+        addLog(`💾 Auto-salvando transação...`, logs, setLogs);
+        
+        if (onStopRecording) {
+          try {
+            await onStopRecording(finalText);
+            addLog('✅ Transação salva com sucesso!', logs, setLogs);
+            
+            // Aguardar um pouco
+            await new Promise(resolve => setTimeout(resolve, 500));
+            addLog('🔄 Vá para a aba Lista para ver!', logs, setLogs);
+          } catch (error: any) {
+            addLog(`❌ ERRO ao salvar: ${error?.message || error}`, logs, setLogs);
+            console.error('Erro completo:', error);
+          }
+        } else {
+          addLog('⚠️ onStopRecording não definido!', logs, setLogs);
+        }
+      } else {
+        addLog('⚠️ Sem texto para salvar (vazio)', logs, setLogs);
+      }
+      
+      // Limpar transcrição para próxima gravação
+      setLocalTranscript('');
+      transcriptRef.current = '';
     };
 
     try {
