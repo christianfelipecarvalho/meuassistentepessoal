@@ -111,6 +111,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       // Atualizar com o texto completo (todos os finais + interim atual)
       const completeText = (fullFinalTranscript.trim() + ' ' + currentInterim).trim();
       setLocalTranscript(completeText);
+      addLog(`📺 Texto exibido: "${completeText}"`, logs, setLogs);
       
       if (currentInterim) {
         addLog(`🔄 Interim: "${currentInterim}"`, logs, setLogs);
@@ -195,11 +196,12 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       }
     }
     
-    // Restaurar console
+    // Restaurar console após 3 segundos para capturar todos os logs
     setTimeout(() => {
       console.log = originalLog;
       console.error = originalError;
-    }, 1000);
+      addLog('🔄 Logs capturados', logs, setLogs);
+    }, 3000);
     
     setIsListening(false);
     // Limpar transcrição local para próxima gravação
