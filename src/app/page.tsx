@@ -6,6 +6,7 @@ import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { RecordingButton } from '@/components/RecordingButton';
 import { Reports } from '@/components/Reports';
 import { SummaryCards } from '@/components/SummaryCards';
+import { Toast } from '@/components/Toast';
 import { useApp } from '@/hooks/useApp';
 import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
@@ -15,6 +16,9 @@ export default function Home() {
   const [debugMode, setDebugMode] = useState(false);
   const [selectedMonthList, setSelectedMonthList] = useState(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+  const [showToast, setShowToast] = useState(false);
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const {
@@ -33,6 +37,42 @@ export default function Home() {
     handleCloseEditModal,
     permissionsGranted
   } = useApp();
+
+  // Função para mostrar toast
+  const showSuccessToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+  };
+
+  // Wrapper para stopRecording que mostra toast de sucesso
+  const handleStopRecordingWithToast = async (transcription?: string) => {
+    try {
+      await stopRecording(transcription);
+      
+      // Se tem transcrição, significa que salvou algo
+      if (transcription && transcription.trim().length > 0) {
+        // Determinar se é gasto ou ganho pela transcrição
+        const isExpense = transcription.toLowerCase().includes('gastei') || 
+                         transcription.toLowerCase().includes('paguei') ||
+                         transcription.toLowerCase().includes('comprei');
+        const isIncome = transcription.toLowerCase().includes('recebi') || 
+                        transcription.toLowerCase().includes('ganhei');
+        
+        let tipoTexto = 'Transação';
+        if (isExpense) {
+          tipoTexto = 'Gasto';
+        } else if (isIncome) {
+          tipoTexto = 'Ganho';
+        }
+        
+        showSuccessToast(`${tipoTexto} registrado com sucesso!`);
+      }
+    } catch (error) {
+      console.error('Erro ao processar transação:', error);
+      showSuccessToast('Erro ao processar transação. Tente novamente.', 'error');
+    }
+  };
 
   // Função para adicionar nova transação manualmente
   const handleAddTransaction = async (newTransaction: {
@@ -54,11 +94,20 @@ export default function Home() {
         audioBlob: emptyBlob
       });
       
-      // Recarregar transações
-      window.location.reload();
+      // Mostrar mensagem de sucesso
+      const tipoTexto = newTransaction.type === 'expense' ? 'Gasto' : 'Ganho';
+      showSuccessToast(`${tipoTexto} registrado com sucesso!`);
+      
+      // Fechar modal
+      setIsAddModalOpen(false);
+      
+      // Aguardar um pouco e recarregar
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       console.error('Erro ao adicionar transação:', error);
-      alert('Erro ao adicionar transação. Tente novamente.');
+      showSuccessToast('Erro ao adicionar transação. Tente novamente.', 'error');
     }
   };
 
@@ -189,7 +238,7 @@ export default function Home() {
               recordingState={recordingState}
               currentTranscription={currentTranscription}
               onStartRecording={startRecording}
-              onStopRecording={(transcription) => stopRecording(transcription)}
+              onStopRecording={handleStopRecordingWithToast}
               permissionsGranted={permissionsGranted}
               showDebugLogs={debugMode}
             />
@@ -281,6 +330,14 @@ export default function Home() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleAddTransaction}
+      />
+
+      {/* Toast de Notificação */}
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
       />
 
       {/* Bottom Navigation - Estilo App Nativo */}

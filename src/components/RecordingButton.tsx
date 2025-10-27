@@ -31,6 +31,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [localTranscript, setLocalTranscript] = useState('');
   const transcriptRef = React.useRef('');
+  const isSavingRef = React.useRef(false); // Flag para evitar salvamento duplicado
 
   const checkSupport = () => {
     addLog('🔍 Verificando suporte ao Speech Recognition...', logs, setLogs);
@@ -73,9 +74,10 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     addLog(`Contínuo: ${recognition.continuous}`, logs, setLogs);
     addLog(`Resultados interim: ${recognition.interimResults}`, logs, setLogs);
 
-    // Resetar transcrição local
+    // Resetar transcrição local e flag de salvamento
     setLocalTranscript('');
     transcriptRef.current = '';
+    isSavingRef.current = false; // Permitir salvamento para nova gravação
 
     recognition.onstart = () => {
       addLog('✅ Escuta iniciada', logs, setLogs);
@@ -137,12 +139,19 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       addLog('⏹️ Escuta finalizada (evento onend)', logs, setLogs);
       setIsListening(false);
       
+      // Verificar se já está salvando (evitar duplicação)
+      if (isSavingRef.current) {
+        addLog('⚠️ Já está salvando, ignorando duplicação (Strict Mode)', logs, setLogs);
+        return;
+      }
+      
       // Salvar automaticamente quando o recognition parar (usando ref)
       const finalText = transcriptRef.current.trim();
       addLog(`📋 Texto capturado: "${finalText}" (${finalText.length} caracteres)`, logs, setLogs);
       
       if (finalText && finalText.length > 0) {
         addLog(`💾 Auto-salvando transação...`, logs, setLogs);
+        isSavingRef.current = true; // Marcar como salvando
         
         if (onStopRecording) {
           try {
@@ -180,12 +189,31 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
   };
 
   const stopListening = async () => {
-    addLog('⏹️ Parando escuta...', logs, setLogs);
+    addLog('⏹️ Parando escuta (botão clicado)...', logs, setLogs);
+    
+    // Verificar se já está salvando (evitar duplicação)
+    if (isSavingRef.current) {
+      addLog('⚠️ Já está salvando, ignorando clique duplicado', logs, setLogs);
+      
+      // Apenas parar o recognition, não salvar novamente
+      if (recognition && isListening) {
+        try {
+          recognition.stop();
+          addLog('✅ Escuta parada (sem salvar novamente)', logs, setLogs);
+        } catch (error) {
+          addLog(`❌ Erro ao parar: ${error}`, logs, setLogs);
+        }
+      }
+      
+      setIsListening(false);
+      return;
+    }
     
     if (recognition && isListening) {
       try {
         recognition.stop();
-        addLog('✅ Escuta parada', logs, setLogs);
+        addLog('✅ Escuta parada - aguardando onend...', logs, setLogs);
+        // O salvamento será feito no recognition.onend
       } catch (error) {
         addLog(`❌ Erro ao parar: ${error}`, logs, setLogs);
       }
@@ -193,41 +221,10 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       addLog('⚠️ Nenhuma escuta ativa', logs, setLogs);
     }
     
-    const finalText = localTranscript.trim();
-    addLog(`📋 Texto transcrito: "${finalText}"`, logs, setLogs);
-    addLog(`📏 Tamanho: ${finalText.length} caracteres`, logs, setLogs);
-    
-    if (!finalText || finalText.length === 0) {
-      addLog('⚠️ Nenhum texto transcrito!', logs, setLogs);
-      setIsListening(false);
-      setLocalTranscript('');
-      return;
-    }
-    
-    // Enviar transcrição para salvar
-    if (onStopRecording) {
-      addLog('💾 Chamando onStopRecording...', logs, setLogs);
-      addLog(`📤 Enviando texto: "${finalText}"`, logs, setLogs);
-      
-      try {
-        addLog('⏳ Aguardando processamento...', logs, setLogs);
-        await onStopRecording(finalText);
-        addLog('✅ onStopRecording completou!', logs, setLogs);
-        
-        // Aguardar um pouco para atualização
-        await new Promise(resolve => setTimeout(resolve, 500));
-        addLog('🔄 Lista deve estar atualizada!', logs, setLogs);
-      } catch (error: any) {
-        addLog(`❌ ERRO ao salvar: ${error?.message || error}`, logs, setLogs);
-        console.error('Erro completo:', error);
-      }
-    } else {
-      addLog('⚠️ onStopRecording não está definido!', logs, setLogs);
-    }
-    
     setIsListening(false);
-    // Limpar transcrição local para próxima gravação
-    setLocalTranscript('');
+    
+    // NÃO salvar aqui! O recognition.onend fará isso automaticamente
+    // Isso evita duplicação quando o usuário clica no botão
   };
 
   // Verificar suporte automaticamente ao montar o componente

@@ -549,7 +549,22 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     console.log(`Tentando extrair valor de: "${text}"`);
     const lowerText = text.toLowerCase();
     
-    // 1. PRIMEIRO: Detectar números com "mil", "milhão", "bilhão"
+    // 1. PRIMEIRO: Detectar números grandes formatados (ex: "10.000", "100.000", "1.000.000")
+    // Formato brasileiro: pontos como separadores de milhar
+    // Ex: "10.000 reais", "100.000", "1.000.000 reais"
+    const bigNumberPattern = /(\d{1,3}(?:\.\d{3})+)(?:\s*(?:reais?|r\$|rs|real))?/gi;
+    const bigNumberMatch = bigNumberPattern.exec(text);
+    if (bigNumberMatch) {
+      // Remover todos os pontos (são separadores de milhar no formato BR)
+      const numberStr = bigNumberMatch[1].replace(/\./g, '');
+      const amount = parseInt(numberStr);
+      if (!isNaN(amount) && amount >= 1000) {
+        console.log(`✅ Número grande formatado detectado: ${amount} de "${bigNumberMatch[1]}"`);
+        return amount;
+      }
+    }
+    
+    // 2. SEGUNDO: Detectar números com "mil", "milhão", "bilhão"
     // Ex: "5 mil reais", "10 mil", "2.5 milhões"
     const milharesPatterns = [
       // Padrão: número + mil + opcional centavos
@@ -581,7 +596,7 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       }
     }
 
-    // 2. SEGUNDO: Detectar valores com centavos por extenso
+    // 3. TERCEIRO: Detectar valores com centavos por extenso
     // Ex: "10 reais e 50 centavos", "10.800 reais e 20 centavos"
     const centavosPattern = /(\d+(?:[.,]\d+)?)\s*(?:reais?|r\$)?\s*(?:e|com)?\s*(\d+)\s*centavos?/gi;
     const centavosMatch = centavosPattern.exec(lowerText);
@@ -595,19 +610,19 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       return amount;
     }
 
-    // 3. TERCEIRO: Detectar números grandes sem separador (ex: "5000", "10000")
+    // 4. QUARTO: Detectar números grandes sem separador (ex: "5000", "10000")
     // Assumir que são milhares se >= 1000
     const numberPattern = /(\d{4,})/g;
-    const bigNumberMatch = numberPattern.exec(text);
-    if (bigNumberMatch) {
-      const amount = parseInt(bigNumberMatch[1]);
+    const numberMatch = numberPattern.exec(text);
+    if (numberMatch) {
+      const amount = parseInt(numberMatch[1]);
       if (amount >= 1000 && amount < 1000000) {
-        console.log(`✅ Número grande detectado: ${amount}`);
+        console.log(`✅ Número grande sem separador detectado: ${amount}`);
         return amount;
       }
     }
 
-    // 4. QUARTO: Padrões normais com decimais
+    // 5. QUINTO: Padrões normais com decimais
     // Ex: "R$ 10,50", "10.50 reais", "gastei 50"
     const patterns = [
       // Padrões específicos com "reais"

@@ -2,7 +2,7 @@ import { ServiceFactory } from '@/services';
 import { AudioRecorder, SpeechTranscriber } from '@/services/audioService';
 import { PermissionChecker } from '@/services/permissionChecker';
 import { Category, RecordingState, Transaction } from '@/types';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // Hook principal seguindo Single Responsibility Principle
 export const useApp = () => {
@@ -19,6 +19,9 @@ export const useApp = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [showPermissionsPrompt, setShowPermissionsPrompt] = useState(false);
+  
+  // Flag para evitar dupla inicialização no Strict Mode (desenvolvimento)
+  const hasInitializedRef = useRef(false);
 
   // Dependency Injection seguindo Dependency Inversion Principle
   const transactionService = ServiceFactory.getTransactionService();
@@ -261,6 +264,15 @@ export const useApp = () => {
   }, [handleOnline, handleOffline]);
 
   const initializeApp = useCallback(async (): Promise<void> => {
+    // Evitar dupla inicialização no Strict Mode (desenvolvimento)
+    if (hasInitializedRef.current) {
+      console.log('⚠️ [USEAPP] App já inicializado, ignorando duplicação (Strict Mode)');
+      return;
+    }
+    
+    console.log('✅ [USEAPP] Inicializando app pela primeira vez...');
+    hasInitializedRef.current = true;
+    
     try {
       await categoryService.initializeDefaultCategories();
       await loadTransactions();
