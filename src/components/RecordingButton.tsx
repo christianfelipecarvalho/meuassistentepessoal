@@ -70,6 +70,8 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     addLog(`Contínuo: ${recognition.continuous}`, logs, setLogs);
     addLog(`Resultados interim: ${recognition.interimResults}`, logs, setLogs);
 
+    // Resetar transcrição local
+    setLocalTranscript('');
     let accumulatedText = '';
 
     recognition.onstart = () => {
@@ -80,28 +82,29 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     recognition.onresult = (event: any) => {
       addLog(`📝 Resultado recebido (${event.results.length} resultados)`, logs, setLogs);
       
-      // Reconstruir todo o texto a partir dos resultados (igual ao SpeechTest)
+      // EXATAMENTE igual ao SpeechTest que funciona
       let finalTranscript = '';
       let interimTranscript = '';
 
-      for (let i = 0; i < event.results.length; i++) {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
+          finalTranscript += transcript;
         } else {
           interimTranscript += transcript;
         }
       }
 
       if (finalTranscript) {
-        addLog(`✅ Final: "${finalTranscript.trim()}"`, logs, setLogs);
-        accumulatedText = finalTranscript.trim();
-        setLocalTranscript(accumulatedText);
+        addLog(`✅ Final: "${finalTranscript}"`, logs, setLogs);
+        accumulatedText += finalTranscript + ' ';
+        setLocalTranscript(accumulatedText.trim());
       }
       
       if (interimTranscript) {
         addLog(`🔄 Interim: "${interimTranscript}"`, logs, setLogs);
-        setLocalTranscript((accumulatedText + ' ' + interimTranscript).trim());
+        // Mostrar acumulado + interim temporário
+        setLocalTranscript((accumulatedText + interimTranscript).trim());
       }
     };
 
