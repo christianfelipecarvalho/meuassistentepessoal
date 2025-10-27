@@ -81,26 +81,30 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     recognition.onresult = (event: any) => {
       addLog(`📝 Resultado recebido (${event.results.length} resultados)`, logs, setLogs);
       
-      // Reconstruir o texto completo a partir de TODOS os resultados finais
-      let fullFinalTranscript = '';
+      // Pegar o ÚLTIMO resultado final (que já contém o texto completo)
+      let lastFinalTranscript = '';
       let currentInterim = '';
 
-      // Iterar por TODOS os resultados para pegar o texto completo
-      for (let i = 0; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
+      // Encontrar o último resultado final
+      for (let i = event.results.length - 1; i >= 0; i--) {
         if (event.results[i].isFinal) {
-          fullFinalTranscript += transcript + ' ';
-        } else {
-          currentInterim += transcript;
+          lastFinalTranscript = event.results[i][0].transcript;
+          break;
         }
       }
 
-      // Verificar se teve novo resultado final
+      // Pegar resultados interim (não finalizados)
+      for (let i = 0; i < event.results.length; i++) {
+        if (!event.results[i].isFinal) {
+          currentInterim += event.results[i][0].transcript;
+        }
+      }
+
+      // Verificar se teve novo resultado final neste evento
       let newFinal = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           newFinal = event.results[i][0].transcript;
-          break;
         }
       }
 
@@ -108,14 +112,15 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
         addLog(`✅ Final: "${newFinal}"`, logs, setLogs);
       }
 
-      // Atualizar com o texto completo (todos os finais + interim atual)
-      const completeText = (fullFinalTranscript.trim() + ' ' + currentInterim).trim();
-      setLocalTranscript(completeText);
-      addLog(`📺 Texto exibido: "${completeText}"`, logs, setLogs);
-      
+      // Usar o último resultado final + interim atual
+      let completeText = lastFinalTranscript;
       if (currentInterim) {
+        completeText = (lastFinalTranscript + ' ' + currentInterim).trim();
         addLog(`🔄 Interim: "${currentInterim}"`, logs, setLogs);
       }
+      
+      setLocalTranscript(completeText);
+      addLog(`📺 Texto exibido: "${completeText}"`, logs, setLogs);
     };
 
     recognition.onerror = (event: any) => {
