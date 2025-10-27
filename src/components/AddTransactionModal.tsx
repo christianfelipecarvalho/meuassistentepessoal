@@ -1,17 +1,23 @@
-import { Category, Transaction } from '@/types';
-import React, { useEffect, useState } from 'react';
+'use client';
+
+import { Category } from '@/types';
+import React, { useState } from 'react';
 import styles from './EditTransactionModal.module.css';
 
-interface EditTransactionModalProps {
-  transaction: Transaction | null;
+interface AddTransactionModalProps {
   categories: Category[];
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedTransaction: Omit<Transaction, 'id'>) => void;
+  onSave: (newTransaction: {
+    amount: number;
+    type: 'income' | 'expense';
+    category: string;
+    description: string;
+    date: Date;
+  }) => void;
 }
 
-export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
-  transaction,
+export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   categories,
   isOpen,
   onClose,
@@ -22,24 +28,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     type: 'expense' as 'income' | 'expense',
     category: '',
     description: '',
-    date: ''
+    date: new Date().toISOString().slice(0, 16) // Data/hora atual
   });
-
-  useEffect(() => {
-    if (transaction) {
-      // Formatar data para input type="datetime-local"
-      const dateObj = new Date(transaction.date);
-      const dateString = dateObj.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
-      
-      setFormData({
-        amount: transaction.amount.toString(),
-        type: transaction.type,
-        category: transaction.category,
-        description: transaction.description,
-        date: dateString
-      });
-    }
-  }, [transaction]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,25 +50,34 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       type: formData.type,
       category: formData.category,
       description: formData.description.trim(),
-      date: formData.date ? new Date(formData.date) : (transaction?.date || new Date()),
-      audioBlob: transaction?.audioBlob
+      date: new Date(formData.date)
+    });
+
+    // Limpar formulário
+    setFormData({
+      amount: '',
+      type: 'expense',
+      category: '',
+      description: '',
+      date: new Date().toISOString().slice(0, 16)
     });
 
     onClose();
   };
 
   const handleClose = () => {
+    // Limpar formulário ao fechar
     setFormData({
       amount: '',
       type: 'expense',
       category: '',
       description: '',
-      date: ''
+      date: new Date().toISOString().slice(0, 16)
     });
     onClose();
   };
 
-  if (!isOpen || !transaction) {
+  if (!isOpen) {
     return null;
   }
 
@@ -86,13 +85,26 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     <div className={styles.overlay} onClick={handleClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
-          <h2>Editar Transação</h2>
+          <h2>➕ Nova Transação</h2>
           <button className={styles.closeButton} onClick={handleClose}>
             ✕
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label htmlFor="type">Tipo</label>
+            <select
+              id="type"
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
+              required
+            >
+              <option value="expense">💸 Gasto</option>
+              <option value="income">💰 Ganho</option>
+            </select>
+          </div>
+
           <div className={styles.formGroup}>
             <label htmlFor="amount">Valor (R$)</label>
             <input
@@ -102,21 +114,9 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
               min="0.01"
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              placeholder="0,00"
               required
             />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="type">Tipo</label>
-            <select
-              id="type"
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
-              required
-            >
-              <option value="expense">Gasto</option>
-              <option value="income">Ganho</option>
-            </select>
           </div>
 
           <div className={styles.formGroup}>
@@ -154,6 +154,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
+              placeholder="Ex: Almoço no restaurante"
               required
             />
           </div>
@@ -163,7 +164,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
               Cancelar
             </button>
             <button type="submit" className={styles.saveButton}>
-              Salvar
+              Adicionar
             </button>
           </div>
         </form>
@@ -171,3 +172,4 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     </div>
   );
 };
+

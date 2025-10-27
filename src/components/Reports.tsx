@@ -43,24 +43,51 @@ const COLORS = [
 ];
 
 export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
-  // Calcular dados do mês atual
+  // Estado para controlar o mês selecionado
+  const [selectedDate, setSelectedDate] = React.useState(new Date());
+
+  // Calcular dados do mês selecionado
   const currentMonthData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
     }
 
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
 
     return transactions.filter(t => {
       const transactionDate = new Date(t.date);
       return (
-        transactionDate.getMonth() === currentMonth &&
-        transactionDate.getFullYear() === currentYear
+        transactionDate.getMonth() === selectedMonth &&
+        transactionDate.getFullYear() === selectedYear
       );
     });
-  }, [transactions]);
+  }, [transactions, selectedDate]);
+
+  // Navegar para o mês anterior
+  const handlePreviousMonth = () => {
+    setSelectedDate(prevDate => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() - 1);
+      return newDate;
+    });
+  };
+
+  // Navegar para o próximo mês
+  const handleNextMonth = () => {
+    setSelectedDate(prevDate => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() + 1);
+      return newDate;
+    });
+  };
+
+  // Verificar se é o mês atual
+  const isCurrentMonth = () => {
+    const now = new Date();
+    return selectedDate.getMonth() === now.getMonth() && 
+           selectedDate.getFullYear() === now.getFullYear();
+  };
 
   // Calcular totais
   const totals = useMemo(() => {
@@ -141,12 +168,31 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
     return `${percent.toFixed(0)}%`;
   };
 
-  const currentMonthName = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const currentMonthName = selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
   return (
     <div className={styles.reportsContainer}>
       <h2 className={styles.title}>📊 Relatório Financeiro</h2>
-      <p className={styles.subtitle}>{currentMonthName}</p>
+      
+      {/* Navegação de Mês */}
+      <div className={styles.monthNavigation}>
+        <button 
+          className={styles.monthButton} 
+          onClick={handlePreviousMonth}
+          title="Mês anterior"
+        >
+          ◀
+        </button>
+        <p className={styles.subtitle}>{currentMonthName}</p>
+        <button 
+          className={styles.monthButton} 
+          onClick={handleNextMonth}
+          disabled={isCurrentMonth()}
+          title="Próximo mês"
+        >
+          ▶
+        </button>
+      </div>
 
       {/* Resumo Geral */}
       <div className={styles.summaryGrid}>
