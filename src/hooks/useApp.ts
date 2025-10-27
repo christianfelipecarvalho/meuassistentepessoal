@@ -67,64 +67,75 @@ export const useApp = () => {
 
   const startRecording = useCallback(async () => {
     try {
-      console.log('🎤 Iniciando gravação...');
+      console.log('🎤 [USEAPP] Iniciando gravação...');
+      console.log('🔍 [USEAPP] Transcriber disponível:', !!transcriber);
+      console.log('🔍 [USEAPP] Método startRealTimeTranscription:', typeof transcriber.startRealTimeTranscription);
       
       // Limpar transcrição anterior
       setCurrentTranscription('');
       
       // Iniciar transcrição em tempo real PRIMEIRO (como no SpeechTest)
-      console.log('🔄 Iniciando transcrição...');
-      transcriber.startRealTimeTranscription(
-        (text: string) => {
-          console.log(`📝 Transcrição recebida: "${text}"`);
-          setCurrentTranscription(text);
-        },
-        (error: Error) => {
-          console.error('❌ Erro na transcrição:', error);
-          // Não parar a gravação se a transcrição falhar
-        }
-      );
+      console.log('🔄 [USEAPP] Chamando startRealTimeTranscription...');
+      
+      try {
+        transcriber.startRealTimeTranscription(
+          (text: string) => {
+            console.log(`📝 [USEAPP] Callback onResult chamado com: "${text}"`);
+            setCurrentTranscription(text);
+          },
+          (error: Error) => {
+            console.error('❌ [USEAPP] Callback onError chamado:', error);
+            // Não parar a gravação se a transcrição falhar
+          }
+        );
+        console.log('✅ [USEAPP] startRealTimeTranscription executado');
+      } catch (err) {
+        console.error('❌ [USEAPP] Erro ao chamar startRealTimeTranscription:', err);
+      }
       
       // Então iniciar gravação de áudio
+      console.log('🎙️ [USEAPP] Iniciando gravação de áudio...');
       await audioRecorder.startRecording();
       setRecordingState(prev => ({ ...prev, isRecording: true }));
       
-      console.log('✅ Gravação iniciada');
+      console.log('✅ [USEAPP] Gravação completa iniciada');
     } catch (error) {
-      console.error('❌ Error starting recording:', error);
+      console.error('❌ [USEAPP] Error starting recording:', error);
       throw error;
     }
   }, [audioRecorder, transcriber]);
 
-  const stopRecording = useCallback(async () => {
-    console.log('⏹️ Parando gravação...');
+  const stopRecording = useCallback(async (transcriptionFromButton?: string) => {
+    console.log('⏹️ [USEAPP] Parando gravação...');
     
     // Parar transcrição em tempo real
     transcriber.stopRealTimeTranscription();
     
-    console.log(`📝 Transcrição capturada: "${currentTranscription}"`);
+    // Usar transcrição passada pelo botão ou a do state
+    const transcriptionText = transcriptionFromButton || currentTranscription;
+    console.log(`📝 [USEAPP] Transcrição recebida: "${transcriptionText}"`);
 
     // Métodos auxiliares seguindo Single Responsibility Principle
     const processAudioOnline = async (audioBlob: Blob): Promise<void> => {
-      console.log('🎤 Processando áudio...');
+      console.log('🎤 [USEAPP] Processando áudio...');
       
-      // Usar a transcrição em tempo real capturada
-      let transcription = currentTranscription.trim();
-      console.log(`📝 Transcrição: "${transcription}"`);
+      // Usar a transcrição recebida
+      let transcription = transcriptionText.trim();
+      console.log(`📝 [USEAPP] Transcrição: "${transcription}"`);
       
       // Se não há transcrição, usar valor padrão
       if (!transcription || transcription.trim().length === 0) {
-        console.log('⚠️ Transcrição vazia, usando padrão');
+        console.log('⚠️ [USEAPP] Transcrição vazia, usando padrão');
         transcription = 'Transação não transcrita';
       }
       
-      console.log(`📋 Texto para parsing: "${transcription}"`);
+      console.log(`📋 [USEAPP] Texto para parsing: "${transcription}"`);
       const transactionData = transcriber.parseTransaction(transcription);
-      console.log('💰 Dados da transação:', transactionData);
+      console.log('💰 [USEAPP] Dados da transação:', transactionData);
       
       // Garantir que há um valor mínimo
       if (transactionData.amount === 0) {
-        console.log('⚠️ Valor zero, usando mínimo');
+        console.log('⚠️ [USEAPP] Valor zero, usando mínimo');
         transactionData.amount = 1;
       }
       

@@ -7,7 +7,7 @@ interface RecordingButtonProps {
   recordingState: RecordingState;
   currentTranscription: string;
   onStartRecording: () => void;
-  onStopRecording: () => void;
+  onStopRecording: (transcription?: string) => void;
   permissionsGranted?: boolean;
 }
 
@@ -25,6 +25,9 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
 }) => {
   const [isSupported, setIsSupported] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
+  const [recognition, setRecognition] = useState<any>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [localTranscript, setLocalTranscript] = useState('');
 
   const checkSupport = () => {
     addLog('🔍 Verificando suporte ao Speech Recognition...', logs, setLogs);
@@ -34,7 +37,121 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     addLog(`SpeechRecognition: ${hasStandard}`, logs, setLogs);
     const supported = hasWebkit || hasStandard;
     setIsSupported(supported);
+    
+    if (supported && !recognition) {
+      addLog('🔧 Criando instância do Speech Recognition...', logs, setLogs);
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const newRecognition = new SpeechRecognition();
+      
+      newRecognition.continuous = true;
+      newRecognition.interimResults = true;
+      newRecognition.lang = 'pt-BR';
+      
+      setRecognition(newRecognition);
+      addLog('✅ Instância criada e configurada', logs, setLogs);
+    }
+    
     addLog(supported ? '✅ Speech Recognition suportado!' : '❌ Speech Recognition NÃO suportado', logs, setLogs);
+  };
+
+  const startListening = async () => {
+    if (!isSupported || !recognition) {
+      addLog('❌ Speech Recognition não suportado ou não inicializado', logs, setLogs);
+      return;
+    }
+
+    if (isListening) {
+      addLog('⚠️ Já está escutando, ignorando...', logs, setLogs);
+      return;
+    }
+
+    addLog('🎤 Iniciando escuta...', logs, setLogs);
+    addLog(`Idioma: ${recognition.lang}`, logs, setLogs);
+    addLog(`Contínuo: ${recognition.continuous}`, logs, setLogs);
+    addLog(`Resultados interim: ${recognition.interimResults}`, logs, setLogs);
+
+    let accumulatedText = '';
+
+    recognition.onstart = () => {
+      addLog('✅ Escuta iniciada', logs, setLogs);
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      addLog(`📝 Resultado recebido (${event.results.length} resultados)`, logs, setLogs);
+      
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        addLog(`✅ Final: "${finalTranscript}"`, logs, setLogs);
+        accumulatedText += finalTranscript + ' ';
+        setLocalTranscript(accumulatedText.trim());
+      }
+      
+      if (interimTranscript) {
+        addLog(`🔄 Interim: "${interimTranscript}"`, logs, setLogs);
+        setLocalTranscript((accumulatedText + interimTranscript).trim());
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      addLog(`❌ Erro: ${event.error}`, logs, setLogs);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      addLog('⏹️ Escuta finalizada', logs, setLogs);
+      setIsListening(false);
+    };
+
+    try {
+      // Também iniciar gravação de áudio
+      if (onStartRecording) {
+        await onStartRecording();
+      }
+      
+      recognition.start();
+      addLog('🚀 recognition.start() chamado', logs, setLogs);
+    } catch (error) {
+      addLog(`❌ Erro ao iniciar: ${error}`, logs, setLogs);
+    }
+  };
+
+  const stopListening = async () => {
+    addLog('⏹️ Parando escuta...', logs, setLogs);
+    
+    if (recognition && isListening) {
+      try {
+        recognition.stop();
+        addLog('✅ Escuta parada', logs, setLogs);
+      } catch (error) {
+        addLog(`❌ Erro ao parar: ${error}`, logs, setLogs);
+      }
+    } else {
+      addLog('⚠️ Nenhuma escuta ativa', logs, setLogs);
+    }
+    
+    addLog(`📋 Texto transcrito: "${localTranscript}"`, logs, setLogs);
+    
+    // Parar gravação de áudio e enviar transcrição
+    if (onStopRecording) {
+      addLog('💾 Salvando transação...', logs, setLogs);
+      await onStopRecording(localTranscript);
+    }
+    
+    setIsListening(false);
+    // Limpar transcrição local para próxima gravação
+    setLocalTranscript('');
   };
 
   // Verificar suporte automaticamente ao montar o componente
@@ -43,23 +160,13 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Adicionar log quando a transcrição mudar
+  // Adicionar log quando o estado de processamento mudar
   useEffect(() => {
-    if (currentTranscription) {
-      addLog(`📝 Transcrição recebida: "${currentTranscription}"`, logs, setLogs);
+    if (recordingState.isProcessing) {
+      addLog('⏳ Processando transação...', logs, setLogs);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTranscription]);
-
-  // Adicionar log quando o estado de gravação mudar
-  useEffect(() => {
-    if (recordingState.isRecording) {
-      addLog('🔴 Gravação ATIVA', logs, setLogs);
-    } else if (recordingState.isProcessing) {
-      addLog('⏳ Processando...', logs, setLogs);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recordingState.isRecording, recordingState.isProcessing]);
+  }, [recordingState.isProcessing]);
 
   const handleClick = () => {
     if (!permissionsGranted) {
@@ -76,18 +183,13 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       return;
     }
     
-    if (!recordingState.isRecording) {
-      // Usar o sistema principal do useApp em vez do sistema local
-      addLog('🎤 Iniciando gravação...', logs, setLogs);
-      if (onStartRecording) {
-        onStartRecording();
-      }
+    // Usar sistema local (igual ao SpeechTest que funciona)
+    if (!isListening) {
+      addLog('🎤 Botão clicado - Iniciando...', logs, setLogs);
+      startListening();
     } else {
-      // Usar o sistema principal do useApp em vez do sistema local
-      addLog('⏹️ Parando gravação...', logs, setLogs);
-      if (onStopRecording) {
-        onStopRecording();
-      }
+      addLog('⏹️ Botão clicado - Parando...', logs, setLogs);
+      stopListening();
     }
   };
 
@@ -119,7 +221,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     if (!isSupported) {
       return '🔍 Verificar Suporte';
     }
-    if (recordingState.isRecording) {
+    if (isListening) {
       return '🔴 Parar Gravação';
     }
     if (recordingState.isProcessing) {
@@ -135,7 +237,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     if (!isSupported) {
       return 'Clique para verificar suporte ao Speech Recognition';
     }
-    if (recordingState.isRecording) {
+    if (isListening) {
       return 'Fale seu gasto ou ganho. Ex: "Gastei 25 reais no almoço"';
     }
     if (recordingState.isProcessing) {
@@ -149,7 +251,7 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       <div className={styles.recordingButtonContainer}>
         <button
           className={`${styles.recordingButton} ${
-            recordingState.isRecording ? styles.recording : ''
+            isListening ? styles.recording : ''
           } ${!permissionsGranted ? styles.disabled : ''}`}
           onClick={handleClick}
           disabled={!permissionsGranted || recordingState.isProcessing}
@@ -167,11 +269,11 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
         <p>Suporte: <span className={isSupported ? styles.supported : styles.notSupported}>
           {isSupported ? '✅ Suportado' : '❌ Não Suportado'}
         </span></p>
-        <p>Gravando: <span className={recordingState.isRecording ? styles.listening : styles.notListening}>
-          {recordingState.isRecording ? '🟢 Sim' : '🔴 Não'}
+        <p>Gravando: <span className={isListening ? styles.listening : styles.notListening}>
+          {isListening ? '🟢 Sim' : '🔴 Não'}
         </span></p>
         <p>Transcrição: <span className={styles.currentTranscript}>
-          {currentTranscription || 'N/A'}
+          {localTranscript || currentTranscription || 'N/A'}
         </span></p>
       </div>
 

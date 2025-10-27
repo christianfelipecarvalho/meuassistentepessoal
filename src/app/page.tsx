@@ -89,7 +89,7 @@ export default function Home() {
               recordingState={recordingState}
               currentTranscription={currentTranscription}
               onStartRecording={startRecording}
-              onStopRecording={stopRecording}
+              onStopRecording={(transcription) => stopRecording(transcription)}
               permissionsGranted={permissionsGranted}
             />
             <SummaryCards transactions={transactions} />
