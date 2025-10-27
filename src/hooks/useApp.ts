@@ -115,7 +115,7 @@ export const useApp = () => {
       try {
         setRecordingState(prev => ({ ...prev, isProcessing: true }));
         
-        let transcription = transcriptionFromButton.trim();
+        const transcription = transcriptionFromButton.trim();
         console.log(`📋 [USEAPP] Texto para parsing: "${transcription}"`);
         
         const transactionData = transcriber.parseTransaction(transcription);
