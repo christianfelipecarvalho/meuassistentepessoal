@@ -80,27 +80,28 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     recognition.onresult = (event: any) => {
       addLog(`📝 Resultado recebido (${event.results.length} resultados)`, logs, setLogs);
       
+      // Reconstruir todo o texto a partir dos resultados (igual ao SpeechTest)
       let finalTranscript = '';
       let interimTranscript = '';
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript;
+          finalTranscript += transcript + ' ';
         } else {
           interimTranscript += transcript;
         }
       }
 
       if (finalTranscript) {
-        addLog(`✅ Final: "${finalTranscript}"`, logs, setLogs);
-        accumulatedText += finalTranscript + ' ';
-        setLocalTranscript(accumulatedText.trim());
+        addLog(`✅ Final: "${finalTranscript.trim()}"`, logs, setLogs);
+        accumulatedText = finalTranscript.trim();
+        setLocalTranscript(accumulatedText);
       }
       
       if (interimTranscript) {
         addLog(`🔄 Interim: "${interimTranscript}"`, logs, setLogs);
-        setLocalTranscript((accumulatedText + interimTranscript).trim());
+        setLocalTranscript((accumulatedText + ' ' + interimTranscript).trim());
       }
     };
 
@@ -148,12 +149,42 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       return;
     }
     
+    // Capturar logs do console para mostrar na tela
+    const originalLog = console.log;
+    const originalError = console.error;
+    
+    console.log = (...args: any[]) => {
+      const message = args.join(' ');
+      if (message.includes('[USEAPP]')) {
+        addLog(message.replace('[USEAPP] ', ''), logs, setLogs);
+      }
+      originalLog(...args);
+    };
+    
+    console.error = (...args: any[]) => {
+      const message = args.join(' ');
+      if (message.includes('[USEAPP]')) {
+        addLog(`❌ ${message.replace('[USEAPP] ', '')}`, logs, setLogs);
+      }
+      originalError(...args);
+    };
+    
     // Enviar transcrição para salvar
     if (onStopRecording) {
       addLog('💾 Salvando transação...', logs, setLogs);
-      await onStopRecording(localTranscript);
-      addLog('✅ Transação salva!', logs, setLogs);
+      try {
+        await onStopRecording(localTranscript);
+        addLog('✅ Transação processada!', logs, setLogs);
+      } catch (error) {
+        addLog(`❌ Erro ao salvar: ${error}`, logs, setLogs);
+      }
     }
+    
+    // Restaurar console
+    setTimeout(() => {
+      console.log = originalLog;
+      console.error = originalError;
+    }, 1000);
     
     setIsListening(false);
     // Limpar transcrição local para próxima gravação

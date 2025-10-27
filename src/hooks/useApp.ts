@@ -119,7 +119,11 @@ export const useApp = () => {
         console.log(`📋 [USEAPP] Texto para parsing: "${transcription}"`);
         
         const transactionData = transcriber.parseTransaction(transcription);
-        console.log('💰 [USEAPP] Dados da transação:', transactionData);
+        console.log('💰 [USEAPP] Dados da transação parseada:');
+        console.log(`   Tipo: ${transactionData.type}`);
+        console.log(`   Valor: R$ ${transactionData.amount}`);
+        console.log(`   Categoria: ${transactionData.category}`);
+        console.log(`   Descrição: ${transactionData.description}`);
         
         // Garantir que há um valor mínimo
         if (transactionData.amount === 0) {
@@ -130,11 +134,13 @@ export const useApp = () => {
         // Criar blob vazio de áudio
         const emptyBlob = new Blob([], { type: 'audio/webm' });
         
+        console.log('💾 [USEAPP] Salvando transação no banco...');
         await transactionService.addTransaction({
           ...transactionData,
           audioBlob: emptyBlob
         });
         
+        console.log('🔄 [USEAPP] Recarregando lista de transações...');
         await loadTransactions();
         
         setRecordingState(prev => ({ 
@@ -144,10 +150,11 @@ export const useApp = () => {
         }));
         
         setCurrentTranscription('');
-        console.log('✅ [USEAPP] Transação salva com sucesso!');
+        console.log('✅ [USEAPP] Transação salva e lista atualizada com sucesso!');
         return;
       } catch (error) {
         console.error('❌ [USEAPP] Erro ao processar transação:', error);
+        console.error('Detalhes:', error);
         setRecordingState(prev => ({ 
           ...prev, 
           isRecording: false, 
