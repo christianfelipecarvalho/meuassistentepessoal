@@ -72,7 +72,6 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
 
     // Resetar transcrição local
     setLocalTranscript('');
-    let accumulatedText = '';
 
     recognition.onstart = () => {
       addLog('✅ Escuta iniciada', logs, setLogs);
@@ -82,29 +81,39 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     recognition.onresult = (event: any) => {
       addLog(`📝 Resultado recebido (${event.results.length} resultados)`, logs, setLogs);
       
-      // EXATAMENTE igual ao SpeechTest que funciona
-      let finalTranscript = '';
-      let interimTranscript = '';
+      // Reconstruir o texto completo a partir de TODOS os resultados finais
+      let fullFinalTranscript = '';
+      let currentInterim = '';
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      // Iterar por TODOS os resultados para pegar o texto completo
+      for (let i = 0; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript;
+          fullFinalTranscript += transcript + ' ';
         } else {
-          interimTranscript += transcript;
+          currentInterim += transcript;
         }
       }
 
-      if (finalTranscript) {
-        addLog(`✅ Final: "${finalTranscript}"`, logs, setLogs);
-        accumulatedText += finalTranscript + ' ';
-        setLocalTranscript(accumulatedText.trim());
+      // Verificar se teve novo resultado final
+      let newFinal = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          newFinal = event.results[i][0].transcript;
+          break;
+        }
       }
+
+      if (newFinal) {
+        addLog(`✅ Final: "${newFinal}"`, logs, setLogs);
+      }
+
+      // Atualizar com o texto completo (todos os finais + interim atual)
+      const completeText = (fullFinalTranscript.trim() + ' ' + currentInterim).trim();
+      setLocalTranscript(completeText);
       
-      if (interimTranscript) {
-        addLog(`🔄 Interim: "${interimTranscript}"`, logs, setLogs);
-        // Mostrar acumulado + interim temporário
-        setLocalTranscript((accumulatedText + interimTranscript).trim());
+      if (currentInterim) {
+        addLog(`🔄 Interim: "${currentInterim}"`, logs, setLogs);
       }
     };
 
@@ -143,9 +152,11 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       addLog('⚠️ Nenhuma escuta ativa', logs, setLogs);
     }
     
-    addLog(`📋 Texto transcrito: "${localTranscript}"`, logs, setLogs);
+    const finalText = localTranscript.trim();
+    addLog(`📋 Texto transcrito: "${finalText}"`, logs, setLogs);
+    addLog(`📏 Tamanho: ${finalText.length} caracteres`, logs, setLogs);
     
-    if (!localTranscript || localTranscript.trim().length === 0) {
+    if (!finalText || finalText.length === 0) {
       addLog('⚠️ Nenhum texto transcrito!', logs, setLogs);
       setIsListening(false);
       setLocalTranscript('');
@@ -174,12 +185,13 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     
     // Enviar transcrição para salvar
     if (onStopRecording) {
-      addLog('💾 Salvando transação...', logs, setLogs);
+      addLog('💾 Enviando para salvar...', logs, setLogs);
       try {
-        await onStopRecording(localTranscript);
+        await onStopRecording(finalText);
         addLog('✅ Transação processada!', logs, setLogs);
       } catch (error) {
         addLog(`❌ Erro ao salvar: ${error}`, logs, setLogs);
+        console.error('Erro completo:', error);
       }
     }
     
