@@ -9,6 +9,7 @@ interface RecordingButtonProps {
   onStartRecording: () => void;
   onStopRecording: (transcription?: string) => void;
   permissionsGranted?: boolean;
+  showDebugLogs?: boolean;
 }
 
 const addLog = (message: string, logs: string[], setLogs: React.Dispatch<React.SetStateAction<string[]>>) => {
@@ -21,7 +22,8 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
   currentTranscription,
   onStartRecording,
   onStopRecording,
-  permissionsGranted = true
+  permissionsGranted = true,
+  showDebugLogs = false
 }) => {
   const [isSupported, setIsSupported] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -351,27 +353,31 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
         </span></p>
       </div>
 
-      {/* Logs de Debug */}
-      <div className={styles.logsContainer}>
-        <h3 className={styles.logsTitle}>📋 Logs de Debug ({logs.length}):</h3>
-        <div className={styles.logsContent}>
-          {logs.length === 0 ? (
-            <div className={styles.logEntry}>Nenhum log ainda...</div>
-          ) : (
-            logs.slice(-30).map((log, index) => (
-              <div key={index} className={styles.logEntry}>
-                {log}
-              </div>
-            ))
-          )}
+      {/* Logs de Debug - Só aparece se debugMode ativado */}
+      {showDebugLogs && (
+        <div className={styles.logsContainer}>
+          <h3 className={styles.logsTitle}>
+            🔧 Modo Debug Ativado - Logs ({logs.length}):
+          </h3>
+          <div className={styles.logsContent}>
+            {logs.length === 0 ? (
+              <div className={styles.logEntry}>Nenhum log ainda...</div>
+            ) : (
+              logs.slice(-30).map((log, index) => (
+                <div key={index} className={styles.logEntry}>
+                  {log}
+                </div>
+              ))
+            )}
+          </div>
+          <button 
+            className={styles.clearLogsButton} 
+            onClick={() => setLogs([])}
+          >
+            🗑️ Limpar Logs
+          </button>
         </div>
-        <button 
-          className={styles.clearLogsButton} 
-          onClick={() => setLogs([])}
-        >
-          🗑️ Limpar Logs
-        </button>
-      </div>
+      )}
     </div>
   );
 };

@@ -2,20 +2,17 @@
 
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
-import { PermissionDebug } from '@/components/PermissionDebug';
-import { SpeechTest } from '@/components/SpeechTest';
-import { TranscriptionDebug } from '@/components/TranscriptionDebug';
 import { RecordingButton } from '@/components/RecordingButton';
 import { SummaryCards } from '@/components/SummaryCards';
 import { useApp } from '@/hooks/useApp';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<'record' | 'list'>('record');
-  const [showDebug, setShowDebug] = useState(false);
-  const [showTranscriptionDebug, setShowTranscriptionDebug] = useState(false);
-  const [showSpeechTest, setShowSpeechTest] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const {
     isOnline,
     transactions,
@@ -37,50 +34,52 @@ export default function Home() {
     return transactions.filter(t => t.category === categoryName);
   };
 
+  // Easter egg: 7 cliques rápidos no título ativa o modo debug
+  const handleTitleClick = () => {
+    clickCountRef.current += 1;
+    
+    // Limpar timer anterior
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+    
+    // Se chegou a 7 cliques, ativar/desativar debug
+    if (clickCountRef.current >= 7) {
+      setDebugMode(!debugMode);
+      clickCountRef.current = 0;
+      console.log('🔧 Modo debug:', !debugMode ? 'ATIVADO' : 'DESATIVADO');
+    }
+    
+    // Resetar contador após 1 segundo
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 1000);
+  };
+
+  // Atalho de teclado: Ctrl + Shift + D
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setDebugMode(!debugMode);
+        console.log('🔧 Modo debug:', !debugMode ? 'ATIVADO' : 'DESATIVADO');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [debugMode]);
+
   return (
     <div className={styles.app}>
       <header className={styles.appHeader}>
-        <h1>💰 Meu Assistente Financeiro</h1>
+        <h1 onClick={handleTitleClick} style={{ cursor: 'pointer', userSelect: 'none' }}>
+          💰 Meu Assistente Financeiro
+        </h1>
         <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
           {isOnline ? '🟢 Online' : '🔴 Offline'}
         </div>
       </header>
-
-      <nav className={styles.navigation}>
-        <button 
-          className={`${styles.navButton} ${currentView === 'record' ? styles.active : ''}`}
-          onClick={() => setCurrentView('record')}
-        >
-          🎤 Gravar
-        </button>
-        <button 
-          className={`${styles.navButton} ${currentView === 'list' ? styles.active : ''}`}
-          onClick={() => setCurrentView('list')}
-        >
-          📋 Lista
-        </button>
-               <button
-                 className={styles.debugButton}
-                 onClick={() => setShowDebug(true)}
-                 title="Debug de Permissões"
-               >
-                 🔍
-               </button>
-               <button
-                 className={styles.debugButton}
-                 onClick={() => setShowTranscriptionDebug(true)}
-                 title="Debug de Transcrição"
-               >
-                 🎤
-               </button>
-               <button
-                 className={styles.debugButton}
-                 onClick={() => setShowSpeechTest(true)}
-                 title="Teste Simples de Speech"
-               >
-                 🗣️
-               </button>
-      </nav>
 
       <main className={styles.mainContent}>
         {currentView === 'record' && (
@@ -91,6 +90,7 @@ export default function Home() {
               onStartRecording={startRecording}
               onStopRecording={(transcription) => stopRecording(transcription)}
               permissionsGranted={permissionsGranted}
+              showDebugLogs={debugMode}
             />
             <SummaryCards transactions={transactions} />
           </div>
@@ -131,58 +131,23 @@ export default function Home() {
         onSave={handleSaveTransaction}
       />
 
-      <PermissionDebug
-        isVisible={showDebug}
-        onClose={() => setShowDebug(false)}
-      />
-
-      <TranscriptionDebug
-        isVisible={showTranscriptionDebug}
-        onClose={() => setShowTranscriptionDebug(false)}
-      />
-
-      {showSpeechTest && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.8)',
-          zIndex: 2000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '1rem'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '1rem',
-            width: '100%',
-            maxWidth: '600px',
-            maxHeight: '90vh',
-            overflow: 'auto',
-            position: 'relative'
-          }}>
-            <button
-              onClick={() => setShowSpeechTest(false)}
-              style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: 'none',
-                border: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer'
-              }}
-            >
-              ✕
-            </button>
-            <SpeechTest />
-          </div>
-        </div>
-      )}
+      {/* Bottom Navigation - Estilo App Nativo */}
+      <nav className={styles.bottomNavigation}>
+        <button 
+          className={`${styles.bottomNavButton} ${currentView === 'record' ? styles.active : ''}`}
+          onClick={() => setCurrentView('record')}
+        >
+          <span className={styles.navIcon}>🎤</span>
+          <span className={styles.navLabel}>Gravar</span>
+        </button>
+        <button 
+          className={`${styles.bottomNavButton} ${currentView === 'list' ? styles.active : ''}`}
+          onClick={() => setCurrentView('list')}
+        >
+          <span className={styles.navIcon}>📋</span>
+          <span className={styles.navLabel}>Lista</span>
+        </button>
+      </nav>
     </div>
   );
 }

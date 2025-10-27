@@ -535,7 +535,7 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     
     const expenseKeywords = [
       'gastei', 'paguei', 'comprei', 'comprar', 'gasto', 'despesa',
-      'saída', 'débito', 'retirada', 'compra', 'pagamento de'
+      'saída', 'débito', 'retirada', 'compra', 'pagamento de', 'botei'
     ];
 
     const isIncome = incomeKeywords.some(keyword => lowerText.includes(keyword));

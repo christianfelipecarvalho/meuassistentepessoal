@@ -14,8 +14,6 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   onEdit, 
   onDelete 
 }) => {
-  const [showActions, setShowActions] = useState(false);
-
   const handleEdit = () => {
     onEdit(transaction);
   };
@@ -27,11 +25,7 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
   };
 
   return (
-    <div 
-      className={`${styles.transactionItem} ${styles[transaction.type]}`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-    >
+    <div className={`${styles.transactionItem} ${styles[transaction.type]}`}>
       <div className={styles.transactionInfo}>
         <p className={styles.transactionDescription}>{transaction.description}</p>
         <p className={styles.transactionDate}>{formatDate(transaction.date)}</p>
@@ -43,20 +37,20 @@ export const TransactionItem: React.FC<TransactionItemProps> = ({
         </span>
       </div>
 
-      <div className={`${styles.actions} ${showActions ? styles.show : ''}`}>
+      <div className={styles.actions}>
         <button 
           className={styles.editButton}
           onClick={handleEdit}
-          title="Editar transação"
+          title="Editar"
         >
-          ✏️
+          ✏️ Editar
         </button>
         <button 
           className={styles.deleteButton}
           onClick={handleDelete}
-          title="Excluir transação"
+          title="Excluir"
         >
-          🗑️
+          🗑️ Excluir
         </button>
       </div>
     </div>
