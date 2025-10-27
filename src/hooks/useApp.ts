@@ -106,43 +106,50 @@ export const useApp = () => {
   }, [audioRecorder, transcriber]);
 
   const stopRecording = useCallback(async (transcriptionFromButton?: string) => {
-    console.log('⏹️ [USEAPP] Parando gravação...');
+    console.log('⏹️ [USEAPP] ==== STOPRECORDING CHAMADO ====');
+    console.log('📝 [USEAPP] Transcrição recebida:', transcriptionFromButton);
     
     // Se veio transcrição do botão, processar direto (sem gravação de áudio)
     if (transcriptionFromButton) {
-      console.log(`📝 [USEAPP] Transcrição do botão: "${transcriptionFromButton}"`);
+      console.log(`✅ [USEAPP] TEM TRANSCRIÇÃO! Processando: "${transcriptionFromButton}"`);
       
       try {
+        console.log('🔄 [USEAPP] Setando estado para processando...');
         setRecordingState(prev => ({ ...prev, isProcessing: true }));
         
         const transcription = transcriptionFromButton.trim();
-        console.log(`📋 [USEAPP] Texto para parsing: "${transcription}"`);
+        console.log(`📋 [USEAPP] Texto trimado: "${transcription}"`);
         
+        console.log('🔍 [USEAPP] Chamando parseTransaction...');
         const transactionData = transcriber.parseTransaction(transcription);
-        console.log('💰 [USEAPP] Dados da transação parseada:');
-        console.log(`   Tipo: ${transactionData.type}`);
-        console.log(`   Valor: R$ ${transactionData.amount}`);
-        console.log(`   Categoria: ${transactionData.category}`);
-        console.log(`   Descrição: ${transactionData.description}`);
+        console.log('💰 [USEAPP] Dados parseados:');
+        console.log('   - Tipo:', transactionData.type);
+        console.log('   - Valor:', transactionData.amount);
+        console.log('   - Categoria:', transactionData.category);
+        console.log('   - Descrição:', transactionData.description);
         
         // Garantir que há um valor mínimo
         if (transactionData.amount === 0) {
-          console.log('⚠️ [USEAPP] Valor zero, usando mínimo');
+          console.log('⚠️ [USEAPP] Valor ZERO! Ajustando para 1');
           transactionData.amount = 1;
         }
         
         // Criar blob vazio de áudio
         const emptyBlob = new Blob([], { type: 'audio/webm' });
+        console.log('📦 [USEAPP] Blob criado');
         
-        console.log('💾 [USEAPP] Salvando transação no banco...');
+        console.log('💾 [USEAPP] Chamando addTransaction...');
         await transactionService.addTransaction({
           ...transactionData,
           audioBlob: emptyBlob
         });
+        console.log('✅ [USEAPP] addTransaction COMPLETOU!');
         
-        console.log('🔄 [USEAPP] Recarregando lista de transações...');
+        console.log('🔄 [USEAPP] Chamando loadTransactions...');
         await loadTransactions();
+        console.log('✅ [USEAPP] loadTransactions COMPLETOU!');
         
+        console.log('🎯 [USEAPP] Atualizando estado final...');
         setRecordingState(prev => ({ 
           ...prev, 
           isRecording: false, 
@@ -150,11 +157,11 @@ export const useApp = () => {
         }));
         
         setCurrentTranscription('');
-        console.log('✅ [USEAPP] Transação salva e lista atualizada com sucesso!');
+        console.log('🎉 [USEAPP] ==== TUDO PRONTO! ====');
         return;
-      } catch (error) {
-        console.error('❌ [USEAPP] Erro ao processar transação:', error);
-        console.error('Detalhes:', error);
+      } catch (error: any) {
+        console.error('❌❌❌ [USEAPP] ERRO FATAL:', error);
+        console.error('Stack:', error?.stack);
         setRecordingState(prev => ({ 
           ...prev, 
           isRecording: false, 
@@ -162,6 +169,8 @@ export const useApp = () => {
         }));
         throw error;
       }
+    } else {
+      console.log('⚠️ [USEAPP] SEM TRANSCRIÇÃO! Usando fluxo antigo');
     }
     
     // Fluxo antigo (com gravação de áudio)

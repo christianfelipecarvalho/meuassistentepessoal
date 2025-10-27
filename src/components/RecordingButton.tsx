@@ -169,44 +169,26 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
       return;
     }
     
-    // Capturar logs do console para mostrar na tela
-    const originalLog = console.log;
-    const originalError = console.error;
-    
-    console.log = (...args: any[]) => {
-      const message = args.join(' ');
-      if (message.includes('[USEAPP]')) {
-        addLog(message.replace('[USEAPP] ', ''), logs, setLogs);
-      }
-      originalLog(...args);
-    };
-    
-    console.error = (...args: any[]) => {
-      const message = args.join(' ');
-      if (message.includes('[USEAPP]')) {
-        addLog(`❌ ${message.replace('[USEAPP] ', '')}`, logs, setLogs);
-      }
-      originalError(...args);
-    };
-    
     // Enviar transcrição para salvar
     if (onStopRecording) {
-      addLog('💾 Enviando para salvar...', logs, setLogs);
+      addLog('💾 Chamando onStopRecording...', logs, setLogs);
+      addLog(`📤 Enviando texto: "${finalText}"`, logs, setLogs);
+      
       try {
+        addLog('⏳ Aguardando processamento...', logs, setLogs);
         await onStopRecording(finalText);
-        addLog('✅ Transação processada!', logs, setLogs);
-      } catch (error) {
-        addLog(`❌ Erro ao salvar: ${error}`, logs, setLogs);
+        addLog('✅ onStopRecording completou!', logs, setLogs);
+        
+        // Aguardar um pouco para atualização
+        await new Promise(resolve => setTimeout(resolve, 500));
+        addLog('🔄 Lista deve estar atualizada!', logs, setLogs);
+      } catch (error: any) {
+        addLog(`❌ ERRO ao salvar: ${error?.message || error}`, logs, setLogs);
         console.error('Erro completo:', error);
       }
+    } else {
+      addLog('⚠️ onStopRecording não está definido!', logs, setLogs);
     }
-    
-    // Restaurar console após 3 segundos para capturar todos os logs
-    setTimeout(() => {
-      console.log = originalLog;
-      console.error = originalError;
-      addLog('🔄 Logs capturados', logs, setLogs);
-    }, 3000);
     
     setIsListening(false);
     // Limpar transcrição local para próxima gravação
