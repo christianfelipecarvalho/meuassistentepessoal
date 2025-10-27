@@ -115,11 +115,9 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     };
 
     try {
-      // Também iniciar gravação de áudio
-      if (onStartRecording) {
-        await onStartRecording();
-      }
-      
+      // NÃO iniciar gravação de áudio para evitar conflito de microfone
+      // Usar APENAS Speech Recognition (igual ao teste que funciona)
+      addLog('🔊 Solicitando acesso ao microfone...', logs, setLogs);
       recognition.start();
       addLog('🚀 recognition.start() chamado', logs, setLogs);
     } catch (error) {
@@ -143,10 +141,18 @@ export const RecordingButton: React.FC<RecordingButtonProps> = ({
     
     addLog(`📋 Texto transcrito: "${localTranscript}"`, logs, setLogs);
     
-    // Parar gravação de áudio e enviar transcrição
+    if (!localTranscript || localTranscript.trim().length === 0) {
+      addLog('⚠️ Nenhum texto transcrito!', logs, setLogs);
+      setIsListening(false);
+      setLocalTranscript('');
+      return;
+    }
+    
+    // Enviar transcrição para salvar
     if (onStopRecording) {
       addLog('💾 Salvando transação...', logs, setLogs);
       await onStopRecording(localTranscript);
+      addLog('✅ Transação salva!', logs, setLogs);
     }
     
     setIsListening(false);

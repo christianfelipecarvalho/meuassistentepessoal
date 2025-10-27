@@ -108,22 +108,66 @@ export const useApp = () => {
   const stopRecording = useCallback(async (transcriptionFromButton?: string) => {
     console.log('⏹️ [USEAPP] Parando gravação...');
     
-    // Parar transcrição em tempo real
+    // Se veio transcrição do botão, processar direto (sem gravação de áudio)
+    if (transcriptionFromButton) {
+      console.log(`📝 [USEAPP] Transcrição do botão: "${transcriptionFromButton}"`);
+      
+      try {
+        setRecordingState(prev => ({ ...prev, isProcessing: true }));
+        
+        let transcription = transcriptionFromButton.trim();
+        console.log(`📋 [USEAPP] Texto para parsing: "${transcription}"`);
+        
+        const transactionData = transcriber.parseTransaction(transcription);
+        console.log('💰 [USEAPP] Dados da transação:', transactionData);
+        
+        // Garantir que há um valor mínimo
+        if (transactionData.amount === 0) {
+          console.log('⚠️ [USEAPP] Valor zero, usando mínimo');
+          transactionData.amount = 1;
+        }
+        
+        // Criar blob vazio de áudio
+        const emptyBlob = new Blob([], { type: 'audio/webm' });
+        
+        await transactionService.addTransaction({
+          ...transactionData,
+          audioBlob: emptyBlob
+        });
+        
+        await loadTransactions();
+        
+        setRecordingState(prev => ({ 
+          ...prev, 
+          isRecording: false, 
+          isProcessing: false 
+        }));
+        
+        setCurrentTranscription('');
+        console.log('✅ [USEAPP] Transação salva com sucesso!');
+        return;
+      } catch (error) {
+        console.error('❌ [USEAPP] Erro ao processar transação:', error);
+        setRecordingState(prev => ({ 
+          ...prev, 
+          isRecording: false, 
+          isProcessing: false 
+        }));
+        throw error;
+      }
+    }
+    
+    // Fluxo antigo (com gravação de áudio)
     transcriber.stopRealTimeTranscription();
     
-    // Usar transcrição passada pelo botão ou a do state
-    const transcriptionText = transcriptionFromButton || currentTranscription;
-    console.log(`📝 [USEAPP] Transcrição recebida: "${transcriptionText}"`);
+    const transcriptionText = currentTranscription;
+    console.log(`📝 [USEAPP] Transcrição: "${transcriptionText}"`);
 
-    // Métodos auxiliares seguindo Single Responsibility Principle
     const processAudioOnline = async (audioBlob: Blob): Promise<void> => {
       console.log('🎤 [USEAPP] Processando áudio...');
       
-      // Usar a transcrição recebida
       let transcription = transcriptionText.trim();
-      console.log(`📝 [USEAPP] Transcrição: "${transcription}"`);
       
-      // Se não há transcrição, usar valor padrão
       if (!transcription || transcription.trim().length === 0) {
         console.log('⚠️ [USEAPP] Transcrição vazia, usando padrão');
         transcription = 'Transação não transcrita';
@@ -133,7 +177,6 @@ export const useApp = () => {
       const transactionData = transcriber.parseTransaction(transcription);
       console.log('💰 [USEAPP] Dados da transação:', transactionData);
       
-      // Garantir que há um valor mínimo
       if (transactionData.amount === 0) {
         console.log('⚠️ [USEAPP] Valor zero, usando mínimo');
         transactionData.amount = 1;
@@ -167,7 +210,6 @@ export const useApp = () => {
         isProcessing: false 
       }));
       
-      // Limpar transcrição atual
       setCurrentTranscription('');
     } catch (error) {
       console.error('Error stopping recording:', error);
