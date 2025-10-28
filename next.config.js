@@ -142,16 +142,32 @@ const withPWA = require('next-pwa')({
         networkTimeoutSeconds: 10 // fall back to cache if api does not response within 10 seconds
       }
     },
+    // Página principal - priorizar cache para funcionar offline
+    {
+      urlPattern: ({ url }) => {
+        const isSameOrigin = self.origin === url.origin
+        if (!isSameOrigin) return false
+        const pathname = url.pathname
+        // Para a página principal e assets Next.js, usar cache primeiro
+        return pathname === '/' || pathname === '/index.html'
+      },
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'main-page',
+        expiration: {
+          maxEntries: 1,
+          maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+        }
+      }
+    },
+    // Outras páginas do app
     {
       urlPattern: ({ url }) => {
         const isSameOrigin = self.origin === url.origin
         if (!isSameOrigin) return false
         const pathname = url.pathname
         if (pathname.startsWith('/api/')) return false
-        // Para a página principal, tentar cache primeiro quando offline
-        if (pathname === '/' || pathname === '/index.html') {
-          return true
-        }
+        if (pathname === '/' || pathname === '/index.html') return false
         return true
       },
       handler: 'NetworkFirst',
@@ -161,7 +177,7 @@ const withPWA = require('next-pwa')({
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 2 // Timeout curto para fallback rápido para cache
+        networkTimeoutSeconds: 1 // Timeout muito curto para fallback instantâneo
       }
     },
     // Cache para assets estáticos do Next.js (funcionar offline)
