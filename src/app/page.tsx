@@ -5,6 +5,7 @@ import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { InitialSetupModal } from '@/components/InitialSetupModal';
+import { InstallPrompt } from '@/components/InstallPrompt';
 import { RecordingButton } from '@/components/RecordingButton';
 import { Reports } from '@/components/Reports';
 import { SummaryCards } from '@/components/SummaryCards';
@@ -505,6 +506,9 @@ export default function Home() {
           <span className={styles.navLabel}>Relatórios</span>
         </button>
       </nav>
+
+      {/* Prompt de Instalação PWA */}
+      <InstallPrompt />
     </div>
   );
 }

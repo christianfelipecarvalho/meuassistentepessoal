@@ -1,0 +1,200 @@
+/* Container do prompt de instalação */
+.installPrompt {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  animation: slideUpIn 0.4s ease-out;
+}
+
+.installPromptContent {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 360px;
+  width: 90vw;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glowing background effect */
+.installPromptContent::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  animation: rotate 4s linear infinite;
+}
+
+.installPromptContent > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Botão fechar */
+.closeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.closeButton span {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Ícone */
+.iconContainer {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.iconContainer .icon {
+  font-size: 3rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Título */
+.title {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Descrição */
+.description {
+  font-size: 0.9rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  opacity: 0.95;
+  line-height: 1.4;
+}
+
+/* Botões */
+.buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-direction: column;
+}
+
+.installButton {
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 12px;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.installButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.installButton:active {
+  transform: translateY(0);
+}
+
+.notNowButton {
+  background: transparent;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notNowButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Animações */
+@keyframes slideUpIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsividade mobile */
+@media (max-width: 480px) {
+  .installPrompt {
+    bottom: 90px;
+  }
+
+  .installPromptContent {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .title {
+    font-size: 1.15rem;
+  }
+
+  .description {
+    font-size: 0.85rem;
+  }
+
+  .iconContainer .icon {
+    font-size: 2.5rem;
+  }
+}
+
