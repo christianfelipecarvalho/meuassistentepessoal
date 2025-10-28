@@ -3,6 +3,7 @@
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
+import { FeedbackModal } from '@/components/FeedbackModal';
 import { InitialSetupModal } from '@/components/InitialSetupModal';
 import { RecordingButton } from '@/components/RecordingButton';
 import { Reports } from '@/components/Reports';
@@ -21,6 +22,7 @@ export default function Home() {
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
   const [showToast, setShowToast] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,7 +113,7 @@ export default function Home() {
         
         // Enviar notificação ao Telegram
         await sendTelegramNotification(
-          `🆕 Nova transação registrada: ${tipoTexto} de R$ ${transactions.length > 0 ? transactions[transactions.length - 1]?.amount.toFixed(2) : '0.00'} - ${transcription}`
+          `🆕 Nova transação registrada: ${tipoTexto} - ${transcription}`
         );
       }
     } catch (error) {
@@ -272,8 +274,18 @@ export default function Home() {
         <h1 onClick={handleTitleClick} style={{ cursor: 'pointer', userSelect: 'none' }}>
           💰 Meu Assistente Financeiro
         </h1>
-        <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
-          {isOnline ? '🟢 Online' : '🔴 Offline'}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowFeedbackModal(true)}
+            className={styles.feedbackButton}
+            title="Avaliar app"
+            type="button"
+          >
+            ⭐
+          </button>
+          <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
+            {isOnline ? '🟢 Online' : '🔴 Offline'}
+          </div>
         </div>
       </header>
 
@@ -390,6 +402,16 @@ export default function Home() {
       <InitialSetupModal
         isOpen={showSetupModal}
         onComplete={handleSetupComplete}
+      />
+
+      {/* Modal de Feedback */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onComplete={() => {
+          setShowFeedbackModal(false);
+          showSuccessToast('Obrigado pelo feedback!', 'success');
+        }}
       />
 
       {/* Bottom Navigation - Estilo App Nativo */}
