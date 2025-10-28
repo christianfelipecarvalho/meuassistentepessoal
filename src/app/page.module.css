@@ -18,35 +18,82 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .feedbackButton {
-  background: none;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
   border: none;
-  font-size: 1.5rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: transform 0.2s ease;
-  padding: 0.25rem 0.5rem;
-  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  animation: bounceGently 2s infinite;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+@keyframes bounceGently {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .feedbackButton:hover {
-  transform: scale(1.2) rotate(15deg);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(251, 191, 36, 0.5);
 }
 
 .feedbackButton:active {
   transform: scale(0.95);
 }
 
-.appHeader h1 {
-  font-size: 1.5rem;
+.buttonLabel {
+  font-size: 0.85rem;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  text-align: center;
+}
+
+.headerTitle {
+  font-size: 1.35rem;
   color: #333;
   margin: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .statusIndicator {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 500;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .statusIndicator.online {
@@ -162,6 +209,85 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
+}
+
+/* Recording Tips */
+.recordingTips {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.recordingTips h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #1e40af;
+  font-weight: 700;
+}
+
+.tipsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tipCard {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.tipCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tipEmoji {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.tipContent {
+  flex: 1;
+}
+
+.tipContent strong {
+  display: block;
+  color: #333;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.tipContent p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.highlight {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.tipsNote {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: #1e40af;
+  text-align: center;
+  font-weight: 500;
 }
 
 /* List View */
@@ -325,9 +451,60 @@
   }
 }
 
+@media (max-width: 768px) {
+  .feedbackPrompt {
+    bottom: calc(75px + env(safe-area-inset-bottom) + 0.5rem);
+    right: 0.75rem;
+    left: 0.75rem;
+    max-width: none;
+  }
+
+  .feedbackPromptContent {
+    padding: 1.25rem;
+  }
+
+  .feedbackPromptIcon {
+    font-size: 2.5rem;
+  }
+
+  .feedbackPromptContent h3 {
+    font-size: 1.1rem;
+  }
+
+  .feedbackPromptContent p {
+    font-size: 0.85rem;
+  }
+}
+
 @media (max-width: 480px) {
-  .appHeader h1 {
+  .appHeader {
+    padding: 0.75rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .headerLeft {
+    gap: 0.2rem;
+  }
+
+  .headerTitle {
     font-size: 1.15rem;
+  }
+
+  .statusIndicator {
+    font-size: 0.7rem;
+  }
+
+  .headerActions {
+    gap: 0.25rem;
+  }
+
+  .feedbackButton {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+  }
+
+  .buttonLabel {
+    display: none;
   }
   
   .categoryHeader {
@@ -374,6 +551,147 @@
     bottom: calc(75px + env(safe-area-inset-bottom));
     border-radius: 14px;
   }
+
+  /* Recording Tips Mobile */
+  .recordingTips {
+    padding: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .recordingTips h3 {
+    font-size: 1rem;
+  }
+
+  .tipsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .tipCard {
+    padding: 0.85rem;
+  }
+
+  .tipEmoji {
+    font-size: 1.5rem;
+  }
+
+  .tipContent strong {
+    font-size: 0.85rem;
+  }
+
+  .tipContent p {
+    font-size: 0.8rem;
+  }
+
+  .tipsNote {
+    font-size: 0.85rem;
+  }
+}
+
+/* Feedback Prompt - Popup Flutuante */
+.feedbackPrompt {
+  position: fixed;
+  bottom: calc(80px + env(safe-area-inset-bottom) + 1rem);
+  right: 1rem;
+  z-index: 10002;
+  animation: slideUpPrompt 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpPrompt {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.feedbackPromptContent {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 280px;
+  position: relative;
+}
+
+.feedbackPromptClose {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.feedbackPromptClose:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.feedbackPromptIcon {
+  font-size: 3rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.feedbackPromptContent h3 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.feedbackPromptContent p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0.95;
+}
+
+.feedbackPromptButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid white;
+  background: white;
+  color: #667eea;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.feedbackPromptButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.feedbackPromptButton:active {
+  transform: translateY(0);
 }
 
 /* PWA - Modo Standalone */

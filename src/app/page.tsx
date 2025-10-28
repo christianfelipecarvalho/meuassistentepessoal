@@ -23,9 +23,11 @@ export default function Home() {
   const [showToast, setShowToast] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const feedbackPromptTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Verificar se já configurou email na primeira vez
   useEffect(() => {
@@ -34,6 +36,19 @@ export default function Home() {
       setShowSetupModal(true);
     } else {
       setUserEmail(email);
+    }
+  }, []);
+
+  // Mostrar popup de avaliação periodicamente (a cada 5 minutos)
+  useEffect(() => {
+    // Só mostrar se já configurou email e ainda não avaliou
+    if (localStorage.getItem('userEmail') && !localStorage.getItem('hasReviewed')) {
+      // Primeiro aviso após 2 minutos
+      const timer = setTimeout(() => {
+        setShowFeedbackPrompt(true);
+      }, 2 * 60 * 1000); // 2 minutos
+
+      return () => clearTimeout(timer);
     }
   }, []);
   const {
@@ -271,21 +286,23 @@ export default function Home() {
   return (
     <div className={styles.app}>
       <header className={styles.appHeader}>
-        <h1 onClick={handleTitleClick} style={{ cursor: 'pointer', userSelect: 'none' }}>
-          💰 Meu Assistente Financeiro
-        </h1>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className={styles.headerLeft}>
+          <h1 onClick={handleTitleClick} className={styles.headerTitle}>
+            💰 Meu Assistente Financeiro
+          </h1>
+          <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
+            {isOnline ? '🟢 Online' : '🔴 Offline'}
+          </div>
+        </div>
+        <div className={styles.headerActions}>
           <button
             onClick={() => setShowFeedbackModal(true)}
             className={styles.feedbackButton}
             title="Avaliar app"
             type="button"
           >
-            ⭐
+            ⭐<span className={styles.buttonLabel}>Avaliar</span>
           </button>
-          <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
-            {isOnline ? '🟢 Online' : '🔴 Offline'}
-          </div>
         </div>
       </header>
 
@@ -300,6 +317,29 @@ export default function Home() {
               permissionsGranted={permissionsGranted}
               showDebugLogs={debugMode}
             />
+            
+            {/* Dicas de gravação */}
+            <div className={styles.recordingTips}>
+              <h3>💡 Como falar:</h3>
+              <div className={styles.tipsGrid}>
+                <div className={styles.tipCard}>
+                  <span className={styles.tipEmoji}>💸</span>
+                  <div className={styles.tipContent}>
+                    <strong>Gastos:</strong>
+                    <p>Gastei <span className={styles.highlight}>R$ 50</span> no mercado</p>
+                  </div>
+                </div>
+                <div className={styles.tipCard}>
+                  <span className={styles.tipEmoji}>💰</span>
+                  <div className={styles.tipContent}>
+                    <strong>Ganhos:</strong>
+                    <p>Recebi <span className={styles.highlight}>R$ 500</span> de salário</p>
+                  </div>
+                </div>
+              </div>
+              <p className={styles.tipsNote}>✨ Seja natural: diga o valor e o motivo</p>
+            </div>
+            
             <SummaryCards transactions={transactions} />
           </div>
         )}
@@ -413,6 +453,33 @@ export default function Home() {
           showSuccessToast('Obrigado pelo feedback!', 'success');
         }}
       />
+
+      {/* Popup Flutuante de Feedback */}
+      {showFeedbackPrompt && (
+        <div className={styles.feedbackPrompt}>
+          <div className={styles.feedbackPromptContent}>
+            <button
+              className={styles.feedbackPromptClose}
+              onClick={() => setShowFeedbackPrompt(false)}
+              title="Fechar"
+            >
+              ✕
+            </button>
+            <div className={styles.feedbackPromptIcon}>⭐</div>
+            <h3>Avalie nosso app!</h3>
+            <p>Sua opinião é muito importante para nós</p>
+            <button
+              className={styles.feedbackPromptButton}
+              onClick={() => {
+                setShowFeedbackPrompt(false);
+                setShowFeedbackModal(true);
+              }}
+            >
+              Avaliar agora
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation - Estilo App Nativo */}
       <nav className={styles.bottomNavigation}>
