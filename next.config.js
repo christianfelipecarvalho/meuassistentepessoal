@@ -5,8 +5,10 @@ const withPWA = require('next-pwa')({
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
-  // Garantir que a página principal funcione offline
   publicExcludes: ['!robots.txt', '!sitemap.xml'],
+  // Forçar precache da página principal
+  navigateFallback: '/',
+  navigateFallbackDenylist: [/^\/_/, /\/api\/.*/],
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -142,21 +144,31 @@ const withPWA = require('next-pwa')({
         networkTimeoutSeconds: 10 // fall back to cache if api does not response within 10 seconds
       }
     },
-    // Página principal - priorizar cache para funcionar offline
+    // Página principal - CacheFirst para funcionar offline
     {
       urlPattern: ({ url }) => {
         const isSameOrigin = self.origin === url.origin
         if (!isSameOrigin) return false
         const pathname = url.pathname
-        // Para a página principal e assets Next.js, usar cache primeiro
         return pathname === '/' || pathname === '/index.html'
       },
       handler: 'CacheFirst',
       options: {
-        cacheName: 'main-page',
+        cacheName: 'main-page-cache',
+        plugins: [
+          {
+            cacheKeyWillBeUsed: async ({ request, mode }) => {
+              return '/'
+            },
+            cacheWillUpdate: async ({ request, response }) => {
+              // Sempre cachear a resposta, mesmo se for 404
+              return response
+            }
+          }
+        ],
         expiration: {
           maxEntries: 1,
-          maxAgeSeconds: 7 * 24 * 60 * 60 // 7 days
+          maxAgeSeconds: 30 * 24 * 60 * 60 // 30 dias
         }
       }
     },
