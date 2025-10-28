@@ -3,6 +3,7 @@
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
+import { InitialSetupModal } from '@/components/InitialSetupModal';
 import { RecordingButton } from '@/components/RecordingButton';
 import { Reports } from '@/components/Reports';
 import { SummaryCards } from '@/components/SummaryCards';
@@ -19,8 +20,20 @@ export default function Home() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
   const [showToast, setShowToast] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Verificar se já configurou email na primeira vez
+  useEffect(() => {
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
+      setShowSetupModal(true);
+    } else {
+      setUserEmail(email);
+    }
+  }, []);
   const {
     isOnline,
     transactions,
@@ -45,6 +58,34 @@ export default function Home() {
     setShowToast(true);
   };
 
+  // Função para configurar email inicial
+  const handleSetupComplete = (email: string) => {
+    localStorage.setItem('userEmail', email);
+    setUserEmail(email);
+    setShowSetupModal(false);
+    showSuccessToast('Configuração salva com sucesso!', 'success');
+  };
+
+  // Função para enviar notificação ao Telegram
+  const sendTelegramNotification = async (message: string) => {
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
+      return; // Se não tem email, não envia notificação
+    }
+
+    try {
+      await fetch('/api/telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, message }),
+      });
+    } catch (error) {
+      console.error('Erro ao enviar notificação no Telegram:', error);
+    }
+  };
+
   // Wrapper para stopRecording que mostra toast de sucesso
   const handleStopRecordingWithToast = async (transcription?: string) => {
     try {
@@ -67,6 +108,11 @@ export default function Home() {
         }
         
         showSuccessToast(`${tipoTexto} registrado com sucesso!`);
+        
+        // Enviar notificação ao Telegram
+        await sendTelegramNotification(
+          `🆕 Nova transação registrada: ${tipoTexto} de R$ ${transactions.length > 0 ? transactions[transactions.length - 1]?.amount.toFixed(2) : '0.00'} - ${transcription}`
+        );
       }
     } catch (error) {
       console.error('Erro ao processar transação:', error);
@@ -338,6 +384,12 @@ export default function Home() {
         type={toastType}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
+      />
+
+      {/* Modal de Configuração Inicial */}
+      <InitialSetupModal
+        isOpen={showSetupModal}
+        onComplete={handleSetupComplete}
       />
 
       {/* Bottom Navigation - Estilo App Nativo */}
