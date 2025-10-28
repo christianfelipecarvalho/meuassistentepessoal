@@ -5,6 +5,8 @@ const withPWA = require('next-pwa')({
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   buildExcludes: [/middleware-manifest\.json$/],
+  // Garantir que a página principal funcione offline
+  publicExcludes: ['!robots.txt', '!sitemap.xml'],
   runtimeCaching: [
     {
       urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -146,16 +148,32 @@ const withPWA = require('next-pwa')({
         if (!isSameOrigin) return false
         const pathname = url.pathname
         if (pathname.startsWith('/api/')) return false
+        // Para a página principal, tentar cache primeiro quando offline
+        if (pathname === '/' || pathname === '/index.html') {
+          return true
+        }
         return true
       },
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'others',
+        cacheName: 'pages',
         expiration: {
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 10
+        networkTimeoutSeconds: 2 // Timeout curto para fallback rápido para cache
+      }
+    },
+    // Cache para assets estáticos do Next.js (funcionar offline)
+    {
+      urlPattern: /\/_next\/static\/.*/i,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'nextjs-static',
+        expiration: {
+          maxEntries: 64,
+          maxAgeSeconds: 365 * 24 * 60 * 60 // 1 year
+        }
       }
     }
   ]
