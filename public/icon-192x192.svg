@@ -1,7 +1,13 @@
 <svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" rx="24" fill="#0ea5e9"/>
-  <circle cx="96" cy="96" r="60" fill="white"/>
-  <path d="M96 60c-19.9 0-36 16.1-36 36v12c0 19.9 16.1 36 36 36s36-16.1 36-36V96c0-19.9-16.1-36-36-36z" fill="#0ea5e9"/>
-  <rect x="84" y="132" width="24" height="24" rx="4" fill="#0ea5e9"/>
-  <text x="96" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">💰</text>
+  <!-- Background with rounded corners -->
+  <rect width="192" height="192" rx="42" fill="#10b981"/>
+  
+  <!-- Safe zone (80% of size) to prevent cropping -->
+  <g transform="translate(19.2, 19.2) scale(0.8)">
+    <!-- White background circle for safe area -->
+    <circle cx="96" cy="96" r="76" fill="white"/>
+    
+    <!-- Dollar sign -->
+    <text x="96" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#10b981">$</text>
+  </g>
 </svg>

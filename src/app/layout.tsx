@@ -4,6 +4,10 @@ export const metadata = {
   title: 'Meu Assistente Financeiro',
   description: 'Assistente financeiro pessoal com gravação de áudio',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/icon-192x192.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
