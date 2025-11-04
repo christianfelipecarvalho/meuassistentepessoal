@@ -218,6 +218,10 @@ const nextConfig = {
     domains: [],
     formats: ['image/webp', 'image/avif'],
   },
+  env: {
+    // Expor variável de ambiente para o cliente
+    NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'production',
+  },
   async headers() {
     return [
       {

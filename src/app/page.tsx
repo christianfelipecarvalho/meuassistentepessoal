@@ -3,6 +3,7 @@
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
+import { EnvironmentBadge } from '@/components/EnvironmentBadge';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { InitialSetupModal } from '@/components/InitialSetupModal';
 import { InstallPrompt } from '@/components/InstallPrompt';
@@ -254,11 +255,14 @@ export default function Home() {
     <div className={styles.app}>
       <header className={styles.appHeader}>
         <div className={styles.headerLeft}>
-          <h1 onClick={handleTitleClick} className={styles.headerTitle}>
-            💰 Meu Assistente Financeiro
-          </h1>
-          <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
-            {isOnline ? '🟢 Online' : '🔴 Offline'}
+          <EnvironmentBadge />
+          <div className={styles.titleContainer}>
+            <h1 onClick={handleTitleClick} className={styles.headerTitle}>
+              💰 Meu Assistente Financeiro
+            </h1>
+            <div className={`${styles.statusIndicator} ${isOnline ? styles.online : styles.offline}`}>
+              {isOnline ? '🟢 Online' : '🔴 Offline'}
+            </div>
           </div>
         </div>
         <div className={styles.headerActions}>
