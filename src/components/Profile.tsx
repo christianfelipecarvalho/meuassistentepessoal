@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AboutModal } from './AboutModal';
 import { TermsModal } from './TermsModal';
+import { BugReportModal } from './BugReportModal';
 import styles from './Profile.module.css';
 
 interface ProfileProps {
@@ -16,6 +17,7 @@ export const Profile: React.FC<ProfileProps> = ({ userEmail }) => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showBugReportModal, setShowBugReportModal] = useState(false);
 
   // Carregar nome do localStorage
   useEffect(() => {
@@ -163,6 +165,16 @@ export const Profile: React.FC<ProfileProps> = ({ userEmail }) => {
           <span className={styles.aboutText}>Termos de Uso e Privacidade</span>
           <span className={styles.aboutArrow}>›</span>
         </button>
+        
+        <button
+          className={styles.aboutButton}
+          onClick={() => setShowBugReportModal(true)}
+          aria-label="Reportar bug ou falha"
+        >
+          <span className={styles.aboutIcon}>🐛</span>
+          <span className={styles.aboutText}>Reportar Bug/Falha</span>
+          <span className={styles.aboutArrow}>›</span>
+        </button>
       </div>
 
       {showSuccessToast && (
@@ -179,6 +191,13 @@ export const Profile: React.FC<ProfileProps> = ({ userEmail }) => {
       <TermsModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
+      />
+
+      <BugReportModal
+        isOpen={showBugReportModal}
+        onClose={() => setShowBugReportModal(false)}
+        userEmail={userEmail}
+        userName={userName}
       />
     </div>
   );
