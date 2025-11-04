@@ -3,6 +3,7 @@
 import { Transaction } from '@/types';
 import { formatCurrency, TimeFilterType, TransactionFilterUtils } from '@/utils';
 import { PDFExportService } from '@/utils/pdfExport';
+import { XLSXExportService } from '@/utils/xlsxExport';
 import React, { useMemo, useState, useRef } from 'react';
 import {
   Cell,
@@ -66,6 +67,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
   const [filterType, setFilterType] = useState<TimeFilterType>('month');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingXLSX, setIsExportingXLSX] = useState(false);
   const reportsContainerRef = useRef<HTMLDivElement>(null);
 
   // Calcular dados do período selecionado
@@ -199,29 +201,76 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
     }
   };
 
+  const handleExportXLSX = async () => {
+    if (filteredData.length === 0) {
+      return;
+    }
+
+    setIsExportingXLSX(true);
+    
+    try {
+      await XLSXExportService.exportReport({
+        transactions,
+        filterType,
+        selectedDate,
+        totals,
+        expensesByCategory,
+        incomeByCategory,
+        userName,
+        userEmail
+      });
+    } catch (error) {
+      console.error('Erro ao exportar XLSX:', error);
+      alert('Erro ao exportar XLSX. Tente novamente.');
+    } finally {
+      setIsExportingXLSX(false);
+    }
+  };
+
   return (
     <div className={styles.reportsContainer} ref={reportsContainerRef}>
       <div className={styles.headerWithExport}>
         <h2 className={styles.title}>Relatório Financeiro</h2>
-        <button
-          className={styles.exportButton}
-          onClick={handleExportPDF}
-          disabled={isExporting || filteredData.length === 0}
-          aria-label="Exportar relatório como PDF"
-          title="Exportar PDF"
-        >
-          {isExporting ? (
-            <>
-              <span className={styles.exportIcon}>⏳</span>
-              <span className={styles.exportText}>Exportando...</span>
-            </>
-          ) : (
-            <>
-              <span className={styles.exportIcon}>📄</span>
-              <span className={styles.exportText}>Exportar PDF</span>
-            </>
-          )}
-        </button>
+        <div className={styles.exportButtons}>
+          <button
+            className={`${styles.exportButton} ${styles.exportButtonXLSX}`}
+            onClick={handleExportXLSX}
+            disabled={isExportingXLSX || filteredData.length === 0}
+            aria-label="Exportar relatório como Excel"
+            title="Exportar Excel"
+          >
+            {isExportingXLSX ? (
+              <>
+                <span className={styles.exportIcon}>⏳</span>
+                <span className={styles.exportText}>Exportando...</span>
+              </>
+            ) : (
+              <>
+                <span className={styles.exportIcon}>📊</span>
+                <span className={styles.exportText}>Exportar Excel</span>
+              </>
+            )}
+          </button>
+          <button
+            className={styles.exportButton}
+            onClick={handleExportPDF}
+            disabled={isExporting || filteredData.length === 0}
+            aria-label="Exportar relatório como PDF"
+            title="Exportar PDF"
+          >
+            {isExporting ? (
+              <>
+                <span className={styles.exportIcon}>⏳</span>
+                <span className={styles.exportText}>Exportando...</span>
+              </>
+            ) : (
+              <>
+                <span className={styles.exportIcon}>📄</span>
+                <span className={styles.exportText}>Exportar PDF</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
       
       {/* Filtro de Tempo */}
