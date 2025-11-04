@@ -55,11 +55,13 @@ export class PDFExportService {
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 15;
+    const footerHeight = 15; // Espaço para o rodapé
+    const availableHeight = pageHeight - margin - footerHeight; // Altura disponível na página
     let yPosition = margin;
 
     // Função para adicionar nova página se necessário
     const checkNewPage = (requiredSpace: number) => {
-      if (yPosition + requiredSpace > pageHeight - margin) {
+      if (yPosition + requiredSpace > availableHeight) {
         pdf.addPage();
         yPosition = margin;
         return true;
@@ -182,7 +184,11 @@ export class PDFExportService {
         checkNewPage(20);
         
         expenses.forEach((transaction, index) => {
-          checkNewPage(8);
+          // Verificar se precisa de nova página antes de adicionar cada transação
+          if (yPosition + 8 > availableHeight) {
+            pdf.addPage();
+            yPosition = margin;
+          }
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           
@@ -196,7 +202,7 @@ export class PDFExportService {
           pdf.text(this.removeEmojis(transaction.description).substring(0, 40), margin + 80, yPosition);
           pdf.text(formatCurrency(transaction.amount), pageWidth - margin, yPosition, { align: 'right' });
           
-          yPosition += 6;
+          yPosition += 7;
         });
         
         yPosition += 5;
@@ -209,7 +215,11 @@ export class PDFExportService {
         checkNewPage(20);
         
         incomes.forEach((transaction) => {
-          checkNewPage(8);
+          // Verificar se precisa de nova página antes de adicionar cada transação
+          if (yPosition + 8 > availableHeight) {
+            pdf.addPage();
+            yPosition = margin;
+          }
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           
@@ -223,7 +233,7 @@ export class PDFExportService {
           pdf.text(this.removeEmojis(transaction.description).substring(0, 40), margin + 80, yPosition);
           pdf.text(formatCurrency(transaction.amount), pageWidth - margin, yPosition, { align: 'right' });
           
-          yPosition += 6;
+          yPosition += 7;
         });
         
         yPosition += 5;
@@ -238,7 +248,11 @@ export class PDFExportService {
       checkNewPage(20);
       
       expensesByCategory.forEach((category) => {
-        checkNewPage(8);
+        // Verificar se precisa de nova página antes de adicionar cada categoria
+        if (yPosition + 8 > availableHeight) {
+          pdf.addPage();
+          yPosition = margin;
+        }
         pdf.setFontSize(9);
         
         // Barra de cor
@@ -252,8 +266,9 @@ export class PDFExportService {
         const percentage = ((category.value / totals.expense) * 100).toFixed(1);
         pdf.text(`${percentage}%`, pageWidth - margin, yPosition, { align: 'right' });
         
-        yPosition += 6;
+        yPosition += 7;
       });
+      yPosition += 5;
     }
 
     // Ganhos por Categoria
@@ -264,7 +279,11 @@ export class PDFExportService {
       checkNewPage(20);
       
       incomeByCategory.forEach((category) => {
-        checkNewPage(8);
+        // Verificar se precisa de nova página antes de adicionar cada categoria
+        if (yPosition + 8 > availableHeight) {
+          pdf.addPage();
+          yPosition = margin;
+        }
         pdf.setFontSize(9);
         
         // Barra de cor
@@ -278,8 +297,9 @@ export class PDFExportService {
         const percentage = totals.income > 0 ? ((category.value / totals.income) * 100).toFixed(1) : '0';
         pdf.text(`${percentage}%`, pageWidth - margin, yPosition, { align: 'right' });
         
-        yPosition += 6;
+        yPosition += 7;
       });
+      yPosition += 5;
     }
 
     // Análise Financeira
@@ -287,7 +307,7 @@ export class PDFExportService {
       addLine();
       yPosition += 5;
       addSubtitle('Analise Financeira', 12);
-      checkNewPage(30);
+      checkNewPage(35);
       
       const expenses = filteredTransactions.filter(t => t.type === 'expense');
       const incomes = filteredTransactions.filter(t => t.type === 'income');
@@ -300,13 +320,13 @@ export class PDFExportService {
       
       pdf.setFontSize(9);
       pdf.text(`Ticket Medio (Gastos): ${formatCurrency(ticketMedioGastos)}`, margin, yPosition);
-      yPosition += 6;
+      yPosition += 7;
       pdf.text(`Ticket Medio (Ganhos): ${formatCurrency(ticketMedioGanhos)}`, margin, yPosition);
-      yPosition += 6;
+      yPosition += 7;
       pdf.text(`Taxa de Poupanca: ${taxaPoupanca}%`, margin, yPosition);
-      yPosition += 6;
+      yPosition += 7;
       pdf.text(`Maior Gasto: ${formatCurrency(maiorGasto)}`, margin, yPosition);
-      yPosition += 6;
+      yPosition += 7;
       pdf.text(`Maior Ganho: ${formatCurrency(maiorGanho)}`, margin, yPosition);
     }
 
@@ -346,11 +366,13 @@ export class PDFExportService {
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 15;
+      const footerHeight = 15; // Espaço para o rodapé
+      const availableHeight = pageHeight - margin - footerHeight; // Altura disponível na página
       let yPosition = margin;
 
       // Funções auxiliares
       const checkNewPage = (requiredSpace: number) => {
-        if (yPosition + requiredSpace > pageHeight - margin) {
+        if (yPosition + requiredSpace > availableHeight) {
           pdf.addPage();
           yPosition = margin;
           return true;
@@ -430,23 +452,45 @@ export class PDFExportService {
       pdf.setTextColor(0, 0, 0);
       yPosition += 30;
 
+      // Nova página para gráficos
+      checkNewPage(20);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Graficos', margin, yPosition);
+      yPosition += 10;
+
       // Capturar gráficos como imagem
       const canvas = await html2canvas(options.chartsContainer, {
-        scale: 2,
+        scale: 1.5, // Reduzir scale para melhor compatibilidade mobile
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        allowTaint: true
+        allowTaint: true,
+        width: options.chartsContainer.scrollWidth,
+        height: options.chartsContainer.scrollHeight
       });
 
       // Adicionar gráficos como imagem
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = pageWidth - 2 * margin;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      checkNewPage(imgHeight + 10);
-      pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
-      yPosition += imgHeight + 10;
+      let imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      // Garantir que a imagem caiba na página disponível
+      const maxImgHeight = availableHeight - yPosition - 10; // -10 para margem de segurança
+      if (imgHeight > maxImgHeight) {
+        // Redimensionar a imagem para caber na página
+        const scaleFactor = maxImgHeight / imgHeight;
+        imgHeight = maxImgHeight;
+        const scaledWidth = imgWidth * scaleFactor;
+        const xOffset = (pageWidth - scaledWidth) / 2; // Centralizar
+        checkNewPage(imgHeight + 10);
+        pdf.addImage(imgData, 'PNG', xOffset, yPosition, scaledWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      } else {
+        checkNewPage(imgHeight + 10);
+        pdf.addImage(imgData, 'PNG', margin, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+      }
 
       // Lista de Transações
       const filteredTransactions = TransactionFilterUtils.filterByPeriod(
@@ -456,24 +500,29 @@ export class PDFExportService {
       );
       
       if (filteredTransactions.length > 0) {
-        checkNewPage(20);
+        // Nova página para transações
+        checkNewPage(25);
         pdf.setDrawColor(200, 200, 200);
         pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 8;
+        yPosition += 10;
 
         // Gastos Detalhados
         const expenses = filteredTransactions.filter(t => t.type === 'expense');
         if (expenses.length > 0) {
+          checkNewPage(20);
           pdf.setFontSize(12);
           pdf.setFont('helvetica', 'bold');
           pdf.text('Gastos Detalhados', margin, yPosition);
-          yPosition += 8;
-          checkNewPage(20);
+          yPosition += 10;
 
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           expenses.forEach((transaction) => {
-            checkNewPage(8);
+            // Verificar se precisa de nova página antes de adicionar cada transação
+            if (yPosition + 8 > availableHeight) {
+              pdf.addPage();
+              yPosition = margin;
+            }
             const date = new Date(transaction.date).toLocaleDateString('pt-BR', { 
               day: '2-digit', 
               month: '2-digit' 
@@ -482,9 +531,9 @@ export class PDFExportService {
             pdf.text(this.removeEmojis(transaction.category), margin + 30, yPosition);
             pdf.text(this.removeEmojis(transaction.description).substring(0, 40), margin + 80, yPosition);
             pdf.text(formatCurrency(transaction.amount), pageWidth - margin, yPosition, { align: 'right' });
-            yPosition += 6;
+            yPosition += 7;
           });
-          yPosition += 5;
+          yPosition += 8;
         }
 
         // Ganhos Detalhados
@@ -494,13 +543,16 @@ export class PDFExportService {
           pdf.setFontSize(12);
           pdf.setFont('helvetica', 'bold');
           pdf.text('Ganhos Detalhados', margin, yPosition);
-          yPosition += 8;
-          checkNewPage(20);
+          yPosition += 10;
 
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           incomes.forEach((transaction) => {
-            checkNewPage(8);
+            // Verificar se precisa de nova página antes de adicionar cada transação
+            if (yPosition + 8 > availableHeight) {
+              pdf.addPage();
+              yPosition = margin;
+            }
             const date = new Date(transaction.date).toLocaleDateString('pt-BR', { 
               day: '2-digit', 
               month: '2-digit' 
@@ -509,27 +561,30 @@ export class PDFExportService {
             pdf.text(this.removeEmojis(transaction.category), margin + 30, yPosition);
             pdf.text(this.removeEmojis(transaction.description).substring(0, 40), margin + 80, yPosition);
             pdf.text(formatCurrency(transaction.amount), pageWidth - margin, yPosition, { align: 'right' });
-            yPosition += 6;
+            yPosition += 7;
           });
-          yPosition += 5;
+          yPosition += 8;
         }
 
         // Gastos por Categoria (resumo)
         if (options.expensesByCategory.length > 0) {
-          checkNewPage(20);
+          checkNewPage(25);
           pdf.setDrawColor(200, 200, 200);
           pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-          yPosition += 8;
+          yPosition += 10;
           pdf.setFontSize(12);
           pdf.setFont('helvetica', 'bold');
           pdf.text('Gastos por Categoria', margin, yPosition);
-          yPosition += 8;
-          checkNewPage(20);
+          yPosition += 10;
 
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           options.expensesByCategory.forEach((category) => {
-            checkNewPage(8);
+            // Verificar se precisa de nova página antes de adicionar cada categoria
+            if (yPosition + 8 > availableHeight) {
+              pdf.addPage();
+              yPosition = margin;
+            }
             const barWidth = (category.value / options.totals.expense) * (pageWidth - 2 * margin - 60);
             pdf.setFillColor(239, 68, 68);
             pdf.rect(margin, yPosition - 3, barWidth, 4, 'F');
@@ -537,26 +592,30 @@ export class PDFExportService {
             pdf.text(formatCurrency(category.value), pageWidth - margin - 40, yPosition, { align: 'right' });
             const percentage = ((category.value / options.totals.expense) * 100).toFixed(1);
             pdf.text(`${percentage}%`, pageWidth - margin, yPosition, { align: 'right' });
-            yPosition += 6;
+            yPosition += 7;
           });
+          yPosition += 5;
         }
 
         // Ganhos por Categoria (resumo)
         if (options.incomeByCategory.length > 0) {
-          checkNewPage(20);
+          checkNewPage(25);
           pdf.setDrawColor(200, 200, 200);
           pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-          yPosition += 8;
+          yPosition += 10;
           pdf.setFontSize(12);
           pdf.setFont('helvetica', 'bold');
           pdf.text('Ganhos por Categoria', margin, yPosition);
-          yPosition += 8;
-          checkNewPage(20);
+          yPosition += 10;
 
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           options.incomeByCategory.forEach((category) => {
-            checkNewPage(8);
+            // Verificar se precisa de nova página antes de adicionar cada categoria
+            if (yPosition + 8 > availableHeight) {
+              pdf.addPage();
+              yPosition = margin;
+            }
             const barWidth = options.totals.income > 0 
               ? (category.value / options.totals.income) * (pageWidth - 2 * margin - 60) 
               : 0;
@@ -568,21 +627,21 @@ export class PDFExportService {
               ? ((category.value / options.totals.income) * 100).toFixed(1) 
               : '0';
             pdf.text(`${percentage}%`, pageWidth - margin, yPosition, { align: 'right' });
-            yPosition += 6;
+            yPosition += 7;
           });
+          yPosition += 5;
         }
 
         // Análise Financeira
         if (filteredTransactions.length > 0) {
-          checkNewPage(30);
+          checkNewPage(35);
           pdf.setDrawColor(200, 200, 200);
           pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-          yPosition += 8;
+          yPosition += 10;
           pdf.setFontSize(12);
           pdf.setFont('helvetica', 'bold');
           pdf.text('Analise Financeira', margin, yPosition);
-          yPosition += 8;
-          checkNewPage(30);
+          yPosition += 10;
 
           const ticketMedioGastos = expenses.length > 0 ? options.totals.expense / expenses.length : 0;
           const ticketMedioGanhos = incomes.length > 0 ? options.totals.income / incomes.length : 0;
@@ -595,13 +654,13 @@ export class PDFExportService {
           pdf.setFontSize(9);
           pdf.setFont('helvetica', 'normal');
           pdf.text(`Ticket Medio (Gastos): ${formatCurrency(ticketMedioGastos)}`, margin, yPosition);
-          yPosition += 6;
+          yPosition += 7;
           pdf.text(`Ticket Medio (Ganhos): ${formatCurrency(ticketMedioGanhos)}`, margin, yPosition);
-          yPosition += 6;
+          yPosition += 7;
           pdf.text(`Taxa de Poupanca: ${taxaPoupanca}%`, margin, yPosition);
-          yPosition += 6;
+          yPosition += 7;
           pdf.text(`Maior Gasto: ${formatCurrency(maiorGasto)}`, margin, yPosition);
-          yPosition += 6;
+          yPosition += 7;
           pdf.text(`Maior Ganho: ${formatCurrency(maiorGanho)}`, margin, yPosition);
         }
       }
