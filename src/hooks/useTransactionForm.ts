@@ -114,9 +114,28 @@ export const useTransactionForm = ({ initialTransaction, onSubmit }: UseTransact
   }, [formData, validateForm, onSubmit]);
 
   const resetForm = useCallback(() => {
-    setFormData(getInitialFormData());
+    if (initialTransaction) {
+      const dateObj = new Date(initialTransaction.date);
+      const dateString = dateObj.toISOString().slice(0, 16);
+      
+      setFormData({
+        amount: initialTransaction.amount.toString(),
+        type: initialTransaction.type,
+        category: initialTransaction.category,
+        description: initialTransaction.description,
+        date: dateString
+      });
+    } else {
+      setFormData({
+        amount: '',
+        type: 'expense',
+        category: '',
+        description: '',
+        date: new Date().toISOString().slice(0, 16)
+      });
+    }
     setErrors([]);
-  }, []);
+  }, [initialTransaction]);
 
   const updateFormField = useCallback(<K extends keyof TransactionFormData>(
     field: K,

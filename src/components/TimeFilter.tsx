@@ -24,7 +24,9 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
   };
 
   const handlePreviousPeriod = () => {
-    if (!onDateChange) return;
+    if (!onDateChange) {
+      return;
+    }
     
     const newDate = new Date(referenceDate);
     
@@ -46,7 +48,9 @@ export const TimeFilter: React.FC<TimeFilterProps> = ({
   };
 
   const handleNextPeriod = () => {
-    if (!onDateChange) return;
+    if (!onDateChange) {
+      return;
+    }
     
     const newDate = new Date(referenceDate);
     const now = new Date();

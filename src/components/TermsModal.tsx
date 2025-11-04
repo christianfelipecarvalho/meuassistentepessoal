@@ -116,7 +116,7 @@ export const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>7. Disponibilidade e Manutenção</h3>
             <p className={styles.text}>
-              O aplicativo é fornecido "como está", sem garantias de qualquer tipo. Não garantimos:
+              O aplicativo é fornecido &quot;como está&quot;, sem garantias de qualquer tipo. Não garantimos:
             </p>
             <ul className={styles.responsibilityList}>
               <li>Disponibilidade contínua do aplicativo</li>

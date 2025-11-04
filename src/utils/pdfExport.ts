@@ -21,19 +21,21 @@ interface ExportPDFOptions {
 export class PDFExportService {
   // Função para remover emojis e caracteres especiais problemáticos
   private static removeEmojis(text: string): string {
-    if (!text) return text;
+    if (!text) {
+      return text;
+    }
     // Remove emojis e caracteres especiais Unicode
+    // Usando ranges Unicode compatíveis sem flag 'u'
     return text
-      .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Emojis
-      .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
-      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Símbolos e pictogramas
-      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transporte e mapas
-      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Bandeiras
-      .replace(/[\u{2600}-\u{26FF}]/gu, '') // Símbolos diversos
-      .replace(/[\u{2700}-\u{27BF}]/gu, '') // Dingbats
-      .replace(/[\u{FE00}-\u{FE0F}]/gu, '') // Variantes
-      .replace(/[\u{200D}]/gu, '') // Zero Width Joiner
-      .replace(/[\u{200B}]/gu, '') // Zero Width Space
+      .replace(/[\uD83C-\uDBFF\uDC00-\uDFFF]/g, '') // Emojis e símbolos
+      .replace(/[\u2600-\u26FF]/g, '') // Símbolos diversos
+      .replace(/[\u2700-\u27BF]/g, '') // Dingbats
+      .replace(/[\uFE00-\uFE0F]/g, '') // Variantes
+      .replace(/[\u200D]/g, '') // Zero Width Joiner
+      .replace(/[\u200B]/g, '') // Zero Width Space
+      .replace(/[\uFEFF]/g, '') // Zero Width No-Break Space
+      .replace(/[\u202E]/g, '') // Right-to-Left Override
+      .replace(/[\u202D]/g, '') // Left-to-Right Override
       .trim();
   }
 
