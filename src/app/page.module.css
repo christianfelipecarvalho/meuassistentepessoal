@@ -358,6 +358,11 @@
   width: 100%;
 }
 
+/* Profile View */
+.profileView {
+  width: 100%;
+}
+
 /* Floating Action Button (FAB) */
 .fabButton {
   position: fixed;

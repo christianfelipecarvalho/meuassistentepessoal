@@ -168,12 +168,30 @@ export class DateUtils {
     return endOfDay;
   }
 
+  static getStartOfWeek(date: Date): Date {
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Segunda-feira como início da semana
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+    return startOfWeek;
+  }
+
+  static getEndOfWeek(date: Date): Date {
+    const endOfWeek = new Date(date);
+    const day = endOfWeek.getDay();
+    const diff = endOfWeek.getDate() - day + (day === 0 ? 0 : 7); // Domingo como fim da semana
+    endOfWeek.setDate(diff);
+    endOfWeek.setHours(23, 59, 59, 999);
+    return endOfWeek;
+  }
+
   static getStartOfMonth(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), 1);
   }
 
   static getEndOfMonth(date: Date): Date {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
   }
 
   static getStartOfYear(date: Date): Date {
@@ -181,7 +199,7 @@ export class DateUtils {
   }
 
   static getEndOfYear(date: Date): Date {
-    return new Date(date.getFullYear(), 11, 31);
+    return new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999);
   }
 
   static isToday(date: Date): boolean {
@@ -198,6 +216,58 @@ export class DateUtils {
   static isThisYear(date: Date): boolean {
     const today = new Date();
     return date.getFullYear() === today.getFullYear();
+  }
+}
+
+export type TimeFilterType = 'all' | 'week' | 'month' | 'year';
+
+export class TransactionFilterUtils {
+  static filterByPeriod(
+    transactions: Transaction[],
+    filterType: TimeFilterType,
+    referenceDate: Date = new Date()
+  ): Transaction[] {
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (filterType) {
+      case 'week':
+        startDate = DateUtils.getStartOfWeek(referenceDate);
+        endDate = DateUtils.getEndOfWeek(referenceDate);
+        break;
+      case 'month':
+        startDate = DateUtils.getStartOfMonth(referenceDate);
+        endDate = DateUtils.getEndOfMonth(referenceDate);
+        break;
+      case 'year':
+        startDate = DateUtils.getStartOfYear(referenceDate);
+        endDate = DateUtils.getEndOfYear(referenceDate);
+        break;
+      case 'all':
+      default:
+        return transactions;
+    }
+
+    return transactions.filter(transaction => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+  }
+
+  static getPeriodLabel(filterType: TimeFilterType, referenceDate: Date = new Date()): string {
+    switch (filterType) {
+      case 'week':
+        const startWeek = DateUtils.getStartOfWeek(referenceDate);
+        const endWeek = DateUtils.getEndOfWeek(referenceDate);
+        return `Semana: ${startWeek.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - ${endWeek.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+      case 'month':
+        return referenceDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      case 'year':
+        return referenceDate.getFullYear().toString();
+      case 'all':
+      default:
+        return 'Todas as transações';
+    }
   }
 }
 

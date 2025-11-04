@@ -1,3 +1,9 @@
+.summaryCardsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .summaryCards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

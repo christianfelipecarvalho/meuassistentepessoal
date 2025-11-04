@@ -1,5 +1,7 @@
 import { Category, Transaction } from '@/types';
-import React, { useEffect, useState } from 'react';
+import { useTransactionForm } from '@/hooks/useTransactionForm';
+import React from 'react';
+import { TransactionForm } from './TransactionForm';
 import styles from './EditTransactionModal.module.css';
 
 interface EditTransactionModalProps {
@@ -17,64 +19,18 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   onClose,
   onSave
 }) => {
-  const [formData, setFormData] = useState({
-    amount: '',
-    type: 'expense' as 'income' | 'expense',
-    category: '',
-    description: '',
-    date: ''
+  const { formData, errors, handleSubmit, updateFormField } = useTransactionForm({
+    initialTransaction: transaction,
+    onSubmit: (data) => {
+      onSave({
+        ...data,
+        audioBlob: transaction?.audioBlob
+      });
+      onClose();
+    }
   });
 
-  useEffect(() => {
-    if (transaction) {
-      // Formatar data para input type="datetime-local"
-      const dateObj = new Date(transaction.date);
-      const dateString = dateObj.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
-      
-      setFormData({
-        amount: transaction.amount.toString(),
-        type: transaction.type,
-        category: transaction.category,
-        description: transaction.description,
-        date: dateString
-      });
-    }
-  }, [transaction]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Por favor, insira um valor válido maior que zero');
-      return;
-    }
-
-    if (!formData.category || !formData.description.trim()) {
-      alert('Por favor, preencha todos os campos');
-      return;
-    }
-
-    onSave({
-      amount,
-      type: formData.type,
-      category: formData.category,
-      description: formData.description.trim(),
-      date: formData.date ? new Date(formData.date) : (transaction?.date || new Date()),
-      audioBlob: transaction?.audioBlob
-    });
-
-    onClose();
-  };
-
   const handleClose = () => {
-    setFormData({
-      amount: '',
-      type: 'expense',
-      category: '',
-      description: '',
-      date: ''
-    });
     onClose();
   };
 
@@ -93,70 +49,13 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="amount">Valor (R$)</label>
-            <input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="type">Tipo</label>
-            <select
-              id="type"
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
-              required
-            >
-              <option value="expense">Gasto</option>
-              <option value="income">Ganho</option>
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="date">Data e Hora</label>
-            <input
-              id="date"
-              type="datetime-local"
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="category">Categoria</label>
-            <select
-              id="category"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              required
-            >
-              <option value="">Selecione uma categoria</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.name}>
-                  {category.icon} {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="description">Descrição</label>
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              required
-            />
-          </div>
+          <TransactionForm
+            formData={formData}
+            categories={categories}
+            errors={errors}
+            onFieldChange={updateFormField}
+            showTypeField={true}
+          />
 
           <div className={styles.buttons}>
             <button type="button" className={styles.cancelButton} onClick={handleClose}>

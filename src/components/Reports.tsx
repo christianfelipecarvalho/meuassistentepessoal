@@ -1,8 +1,9 @@
 'use client';
 
 import { Transaction } from '@/types';
-import { formatCurrency } from '@/utils';
-import React, { useMemo } from 'react';
+import { formatCurrency, TimeFilterType, TransactionFilterUtils } from '@/utils';
+import { PDFExportService } from '@/utils/pdfExport';
+import React, { useMemo, useState, useRef } from 'react';
 import {
   Cell,
   Legend,
@@ -11,10 +12,14 @@ import {
   ResponsiveContainer,
   Tooltip
 } from 'recharts';
+import { InfoTooltip } from './InfoTooltip';
+import { TimeFilter } from './TimeFilter';
 import styles from './Reports.module.css';
 
 interface ReportsProps {
   transactions: Transaction[];
+  userName?: string;
+  userEmail?: string;
 }
 
 interface CategoryData {
@@ -31,7 +36,7 @@ interface MonthlyData {
 }
 
 const COLORS = [
-  '#ef4444', // Vermelho
+  '#ef4444', // Vermelho (para gastos)
   '#06b6d4', // Ciano
   '#3b82f6', // Azul
   '#10b981', // Verde
@@ -42,60 +47,43 @@ const COLORS = [
   '#6b7280', // Cinza
 ];
 
-export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
-  // Estado para controlar o mês selecionado
-  const [selectedDate, setSelectedDate] = React.useState(new Date());
+// Cores para ganhos (sem vermelho)
+const INCOME_COLORS = [
+  '#10b981', // Verde
+  '#3b82f6', // Azul
+  '#06b6d4', // Ciano
+  '#8b5cf6', // Roxo
+  '#6366f1', // Indigo
+  '#f59e0b', // Laranja
+  '#ec4899', // Rosa
+  '#14b8a6', // Teal
+  '#0ea5e9', // Sky Blue
+  '#6b7280', // Cinza
+];
 
-  // Calcular dados do mês selecionado
-  const currentMonthData = useMemo(() => {
+export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEmail }) => {
+  // Estado para controlar o filtro de tempo
+  const [filterType, setFilterType] = useState<TimeFilterType>('month');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isExporting, setIsExporting] = useState(false);
+  const reportsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Calcular dados do período selecionado
+  const filteredData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
     }
 
-    const selectedMonth = selectedDate.getMonth();
-    const selectedYear = selectedDate.getFullYear();
-
-    return transactions.filter(t => {
-      const transactionDate = new Date(t.date);
-      return (
-        transactionDate.getMonth() === selectedMonth &&
-        transactionDate.getFullYear() === selectedYear
-      );
-    });
-  }, [transactions, selectedDate]);
-
-  // Navegar para o mês anterior
-  const handlePreviousMonth = () => {
-    setSelectedDate(prevDate => {
-      const newDate = new Date(prevDate);
-      newDate.setMonth(newDate.getMonth() - 1);
-      return newDate;
-    });
-  };
-
-  // Navegar para o próximo mês
-  const handleNextMonth = () => {
-    setSelectedDate(prevDate => {
-      const newDate = new Date(prevDate);
-      newDate.setMonth(newDate.getMonth() + 1);
-      return newDate;
-    });
-  };
-
-  // Verificar se é o mês atual
-  const isCurrentMonth = () => {
-    const now = new Date();
-    return selectedDate.getMonth() === now.getMonth() && 
-           selectedDate.getFullYear() === now.getFullYear();
-  };
+    return TransactionFilterUtils.filterByPeriod(transactions, filterType, selectedDate);
+  }, [transactions, filterType, selectedDate]);
 
   // Calcular totais
   const totals = useMemo(() => {
-    const income = currentMonthData
+    const income = filteredData
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
     
-    const expense = currentMonthData
+    const expense = filteredData
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
     
@@ -105,13 +93,13 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
       balance: income - expense,
       total: income + expense
     };
-  }, [currentMonthData]);
+  }, [filteredData]);
 
   // Dados para gráfico de pizza - Gastos por categoria
   const expensesByCategory = useMemo(() => {
     const categoryMap = new Map<string, number>();
     
-    currentMonthData
+    filteredData
       .filter(t => t.type === 'expense')
       .forEach(t => {
         const current = categoryMap.get(t.category) || 0;
@@ -127,13 +115,13 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
       .sort((a, b) => b.value - a.value);
 
     return data;
-  }, [currentMonthData]);
+  }, [filteredData]);
 
   // Dados para gráfico de pizza - Ganhos por categoria
   const incomeByCategory = useMemo(() => {
     const categoryMap = new Map<string, number>();
     
-    currentMonthData
+    filteredData
       .filter(t => t.type === 'income')
       .forEach(t => {
         const current = categoryMap.get(t.category) || 0;
@@ -144,12 +132,12 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
       .map(([name, value], index) => ({
         name,
         value,
-        color: COLORS[index % COLORS.length]
+        color: INCOME_COLORS[index % INCOME_COLORS.length]
       }))
       .sort((a, b) => b.value - a.value);
 
     return data;
-  }, [currentMonthData]);
+  }, [filteredData]);
 
   // Calcular percentuais
   const getPercentage = (value: number, total: number): string => {
@@ -168,31 +156,81 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
     return `${percent.toFixed(0)}%`;
   };
 
-  const currentMonthName = selectedDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const handleExportPDF = async () => {
+    if (!reportsContainerRef.current) {
+      return;
+    }
+
+    setIsExporting(true);
+    
+    try {
+      // Buscar gráficos container se existir
+      const chartsContainer = reportsContainerRef.current.querySelector(`.${styles.chartsGrid}`) as HTMLElement;
+      
+      if (chartsContainer) {
+        await PDFExportService.exportReportWithCharts({
+          transactions,
+          filterType,
+          selectedDate,
+          totals,
+          expensesByCategory,
+          incomeByCategory,
+          userName,
+          userEmail,
+          chartsContainer
+        });
+      } else {
+        await PDFExportService.exportReport({
+          transactions,
+          filterType,
+          selectedDate,
+          totals,
+          expensesByCategory,
+          incomeByCategory,
+          userName,
+          userEmail
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      alert('Erro ao exportar PDF. Tente novamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
-    <div className={styles.reportsContainer}>
-      <h2 className={styles.title}>📊 Relatório Financeiro</h2>
-      
-      {/* Navegação de Mês */}
-      <div className={styles.monthNavigation}>
-        <button 
-          className={styles.monthButton} 
-          onClick={handlePreviousMonth}
-          title="Mês anterior"
+    <div className={styles.reportsContainer} ref={reportsContainerRef}>
+      <div className={styles.headerWithExport}>
+        <h2 className={styles.title}>Relatório Financeiro</h2>
+        <button
+          className={styles.exportButton}
+          onClick={handleExportPDF}
+          disabled={isExporting || filteredData.length === 0}
+          aria-label="Exportar relatório como PDF"
+          title="Exportar PDF"
         >
-          ◀
-        </button>
-        <p className={styles.subtitle}>{currentMonthName}</p>
-        <button 
-          className={styles.monthButton} 
-          onClick={handleNextMonth}
-          disabled={isCurrentMonth()}
-          title="Próximo mês"
-        >
-          ▶
+          {isExporting ? (
+            <>
+              <span className={styles.exportIcon}>⏳</span>
+              <span className={styles.exportText}>Exportando...</span>
+            </>
+          ) : (
+            <>
+              <span className={styles.exportIcon}>📄</span>
+              <span className={styles.exportText}>Exportar PDF</span>
+            </>
+          )}
         </button>
       </div>
+      
+      {/* Filtro de Tempo */}
+      <TimeFilter
+        filterType={filterType}
+        onFilterChange={setFilterType}
+        referenceDate={selectedDate}
+        onDateChange={setSelectedDate}
+      />
 
       {/* Resumo Geral */}
       <div className={styles.summaryGrid}>
@@ -202,7 +240,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
             <h3>Total de Ganhos</h3>
             <p className={styles.cardAmount}>{formatCurrency(totals.income)}</p>
             <span className={styles.cardDetail}>
-              {currentMonthData.filter(t => t.type === 'income').length} transações
+              {filteredData.filter(t => t.type === 'income').length} transações
             </span>
           </div>
         </div>
@@ -213,7 +251,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
             <h3>Total de Gastos</h3>
             <p className={styles.cardAmount}>{formatCurrency(totals.expense)}</p>
             <span className={styles.cardDetail}>
-              {currentMonthData.filter(t => t.type === 'expense').length} transações
+              {filteredData.filter(t => t.type === 'expense').length} transações
             </span>
           </div>
         </div>
@@ -222,7 +260,9 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
           <div className={styles.cardIcon}>{totals.balance >= 0 ? '📈' : '📉'}</div>
           <div className={styles.cardContent}>
             <h3>Saldo do Mês</h3>
-            <p className={styles.cardAmount}>{formatCurrency(totals.balance)}</p>
+            <p className={`${styles.cardAmount} ${totals.balance >= 0 ? styles.positiveAmount : styles.negativeAmount}`}>
+              {formatCurrency(totals.balance)}
+            </p>
             <span className={styles.cardDetail}>
               {totals.balance >= 0 ? 'Saldo positivo' : 'Saldo negativo'}
             </span>
@@ -231,7 +271,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
       </div>
 
       {/* Gráficos */}
-      {currentMonthData.length > 0 ? (
+      {filteredData.length > 0 ? (
         <div className={styles.chartsGrid}>
           {/* Gráfico de Gastos */}
           {expensesByCategory.length > 0 && (
@@ -342,34 +382,52 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
       )}
 
       {/* Análise Financeira */}
-      {currentMonthData.length > 0 && (
+      {filteredData.length > 0 && (
         <div className={styles.analysisCard}>
           <h3 className={styles.analysisTitle}>📈 Análise Financeira</h3>
           <div className={styles.analysisList}>
             <div className={styles.analysisItem}>
-              <span className={styles.analysisLabel}>Ticket Médio (Gastos):</span>
+              <div className={styles.analysisLabelContainer}>
+                <span className={styles.analysisLabel}>Ticket Médio (Gastos):</span>
+                <InfoTooltip
+                  title="Ticket Médio (Gastos)"
+                  content="O ticket médio de gastos é o valor médio gasto por transação. É calculado dividindo o total de gastos pelo número de transações de gastos realizadas no período."
+                />
+              </div>
               <span className={styles.analysisValue}>
                 {formatCurrency(
                   (() => {
-                    const expenses = currentMonthData.filter(t => t.type === 'expense');
+                    const expenses = filteredData.filter(t => t.type === 'expense');
                     return expenses.length > 0 ? totals.expense / expenses.length : 0;
                   })()
                 )}
               </span>
             </div>
             <div className={styles.analysisItem}>
-              <span className={styles.analysisLabel}>Ticket Médio (Ganhos):</span>
+              <div className={styles.analysisLabelContainer}>
+                <span className={styles.analysisLabel}>Ticket Médio (Ganhos):</span>
+                <InfoTooltip
+                  title="Ticket Médio (Ganhos)"
+                  content="O ticket médio de ganhos é o valor médio recebido por transação. É calculado dividindo o total de ganhos pelo número de transações de ganhos realizadas no período."
+                />
+              </div>
               <span className={styles.analysisValue}>
                 {formatCurrency(
                   (() => {
-                    const incomes = currentMonthData.filter(t => t.type === 'income');
+                    const incomes = filteredData.filter(t => t.type === 'income');
                     return incomes.length > 0 ? totals.income / incomes.length : 0;
                   })()
                 )}
               </span>
             </div>
             <div className={styles.analysisItem}>
-              <span className={styles.analysisLabel}>Taxa de Poupança:</span>
+              <div className={styles.analysisLabelContainer}>
+                <span className={styles.analysisLabel}>Taxa de Poupança:</span>
+                <InfoTooltip
+                  title="Taxa de Poupança"
+                  content="A taxa de poupança mostra quanto você está conseguindo poupar em relação aos seus ganhos. É calculada dividindo o saldo (ganhos - gastos) pelo total de ganhos e multiplicando por 100. Um valor positivo indica que você está gastando menos do que ganha."
+                />
+              </div>
               <span className={`${styles.analysisValue} ${totals.balance >= 0 ? styles.positive : styles.negative}`}>
                 {totals.income > 0 ? getPercentage(totals.balance, totals.income) : '0%'}
               </span>
@@ -379,7 +437,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
               <span className={styles.analysisValue}>
                 {formatCurrency(
                   (() => {
-                    const expenses = currentMonthData.filter(t => t.type === 'expense');
+                    const expenses = filteredData.filter(t => t.type === 'expense');
                     return expenses.length > 0 ? Math.max(...expenses.map(t => t.amount)) : 0;
                   })()
                 )}
@@ -390,7 +448,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions }) => {
               <span className={styles.analysisValue}>
                 {formatCurrency(
                   (() => {
-                    const incomes = currentMonthData.filter(t => t.type === 'income');
+                    const incomes = filteredData.filter(t => t.type === 'income');
                     return incomes.length > 0 ? Math.max(...incomes.map(t => t.amount)) : 0;
                   })()
                 )}

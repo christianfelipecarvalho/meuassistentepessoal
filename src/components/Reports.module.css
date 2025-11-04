@@ -4,12 +4,82 @@
   margin: 0 auto;
 }
 
+.headerWithExport {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
 .title {
   font-size: 1.8rem;
   font-weight: 700;
   color: #333;
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
   text-align: center;
-  margin-bottom: 1rem;
+}
+
+.exportButton {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  touch-action: manipulation;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.exportButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.exportButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.exportButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.exportIcon {
+  font-size: 1.2rem;
+}
+
+.exportText {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 480px) {
+  .headerWithExport {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .title {
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .exportButton {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Month Navigation */
@@ -98,11 +168,11 @@
   border-left: 4px solid #3b82f6;
 }
 
-.summaryCard.positive {
-  border-left-color: #22c55e;
+.summaryCard.balance.positive {
+  border-left-color: #3b82f6;
 }
 
-.summaryCard.negative {
+.summaryCard.balance.negative {
   border-left-color: #ef4444;
 }
 
@@ -127,6 +197,14 @@
   font-weight: 700;
   color: #333;
   margin: 0;
+}
+
+.cardAmount.positiveAmount {
+  color: #3b82f6;
+}
+
+.cardAmount.negativeAmount {
+  color: #ef4444;
 }
 
 .cardDetail {
@@ -242,12 +320,37 @@
   padding: 1rem;
   background: #f8f9fa;
   border-radius: 10px;
+  gap: 1rem;
+}
+
+.analysisLabelContainer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 .analysisLabel {
   font-size: 0.95rem;
   color: #666;
   font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .analysisItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .analysisLabelContainer {
+    width: 100%;
+  }
+
+  .analysisValue {
+    align-self: flex-end;
+    font-size: 1rem;
+  }
 }
 
 .analysisValue {

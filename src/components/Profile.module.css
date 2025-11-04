@@ -1,0 +1,331 @@
+.profileContainer {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.profileHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.profileAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.profileTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.profileCard {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profileSection {
+  margin-bottom: 1.5rem;
+}
+
+.profileSection:last-child {
+  margin-bottom: 0;
+}
+
+.profileLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+}
+
+.profileValue {
+  font-size: 1rem;
+  color: #333;
+}
+
+.emailValue {
+  color: #4b5563;
+  word-break: break-all;
+}
+
+.nameDisplay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.nameValue {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.nameValue:empty::before {
+  content: 'Não informado';
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.editButton {
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.editButton:hover {
+  background: #e5e7eb;
+  border-color: #d1d5db;
+}
+
+.editButton:active {
+  transform: scale(0.95);
+}
+
+.editContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nameInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+
+.nameInput:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.editActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.saveButton,
+.cancelButton {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  touch-action: manipulation;
+  min-height: 44px;
+}
+
+.saveButton {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.saveButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.saveButton:active {
+  transform: translateY(0);
+}
+
+.cancelButton {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 2px solid #e5e7eb;
+}
+
+.cancelButton:hover {
+  background: #e5e7eb;
+}
+
+.cancelButton:active {
+  transform: scale(0.95);
+}
+
+.profileDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 1.5rem 0;
+}
+
+.licenseBadge {
+  display: inline-block;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.versionValue {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.aboutSection {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.aboutButton {
+  width: 100%;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  color: #333;
+  touch-action: manipulation;
+  min-height: 56px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.aboutButton:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.aboutButton:active {
+  transform: translateY(0);
+}
+
+.aboutIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.aboutText {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+}
+
+.aboutArrow {
+  font-size: 1.5rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.aboutButton:hover .aboutArrow {
+  transform: translateX(4px);
+  color: #667eea;
+}
+
+.successToast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 1001;
+  animation: slideUpToast 0.3s ease-out;
+}
+
+@keyframes slideUpToast {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .profileContainer {
+    padding: 0.5rem;
+  }
+
+  .profileCard {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .profileAvatar {
+    width: 70px;
+    height: 70px;
+    font-size: 1.75rem;
+  }
+
+  .profileTitle {
+    font-size: 1.25rem;
+  }
+
+  .nameInput {
+    font-size: 16px; /* Evita zoom no iOS */
+  }
+
+  .editActions {
+    flex-direction: column;
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
+  }
+}
+

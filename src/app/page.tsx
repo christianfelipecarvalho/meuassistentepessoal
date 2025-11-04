@@ -6,18 +6,22 @@ import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import { InitialSetupModal } from '@/components/InitialSetupModal';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { Profile } from '@/components/Profile';
 import { RecordingButton } from '@/components/RecordingButton';
 import { Reports } from '@/components/Reports';
 import { SummaryCards } from '@/components/SummaryCards';
+import { TimeFilter } from '@/components/TimeFilter';
 import { Toast } from '@/components/Toast';
 import { useApp } from '@/hooks/useApp';
+import { TimeFilterType, TransactionFilterUtils } from '@/utils';
 import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState<'record' | 'list' | 'reports'>('record');
+  const [currentView, setCurrentView] = useState<'record' | 'list' | 'reports' | 'profile'>('record');
   const [debugMode, setDebugMode] = useState(false);
-  const [selectedMonthList, setSelectedMonthList] = useState(new Date());
+  const [filterTypeList, setFilterTypeList] = useState<TimeFilterType>('month');
+  const [selectedDateList, setSelectedDateList] = useState(new Date());
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
@@ -175,51 +179,13 @@ export default function Home() {
     }
   };
 
-  const getTransactionsByCategory = (categoryName: string) => {
-    return transactions.filter(t => t.category === categoryName);
-  };
-
-  // Filtrar transações por mês selecionado
+  // Filtrar transações por período selecionado
   const getFilteredTransactions = () => {
     if (!transactions) {
       return [];
     }
     
-    const selectedMonth = selectedMonthList.getMonth();
-    const selectedYear = selectedMonthList.getFullYear();
-
-    return transactions.filter(t => {
-      const transactionDate = new Date(t.date);
-      return (
-        transactionDate.getMonth() === selectedMonth &&
-        transactionDate.getFullYear() === selectedYear
-      );
-    });
-  };
-
-  // Navegar para o mês anterior (lista)
-  const handlePreviousMonthList = () => {
-    setSelectedMonthList(prevDate => {
-      const newDate = new Date(prevDate);
-      newDate.setMonth(newDate.getMonth() - 1);
-      return newDate;
-    });
-  };
-
-  // Navegar para o próximo mês (lista)
-  const handleNextMonthList = () => {
-    setSelectedMonthList(prevDate => {
-      const newDate = new Date(prevDate);
-      newDate.setMonth(newDate.getMonth() + 1);
-      return newDate;
-    });
-  };
-
-  // Verificar se é o mês atual (lista)
-  const isCurrentMonthList = () => {
-    const now = new Date();
-    return selectedMonthList.getMonth() === now.getMonth() && 
-           selectedMonthList.getFullYear() === now.getFullYear();
+    return TransactionFilterUtils.filterByPeriod(transactions, filterTypeList, selectedDateList);
   };
 
   /**
@@ -349,27 +315,13 @@ export default function Home() {
           <div className={styles.listView}>
             <h2>📋 Transações por Categoria</h2>
             
-            {/* Navegação de Mês */}
-            <div className={styles.monthNavigationList}>
-              <button 
-                className={styles.monthButtonList} 
-                onClick={handlePreviousMonthList}
-                title="Mês anterior"
-              >
-                ◀
-              </button>
-              <p className={styles.monthLabel}>
-                {selectedMonthList.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-              </p>
-              <button 
-                className={styles.monthButtonList} 
-                onClick={handleNextMonthList}
-                disabled={isCurrentMonthList()}
-                title="Próximo mês"
-              >
-                ▶
-              </button>
-            </div>
+            {/* Filtro de Tempo */}
+            <TimeFilter
+              filterType={filterTypeList}
+              onFilterChange={setFilterTypeList}
+              referenceDate={selectedDateList}
+              onDateChange={setSelectedDateList}
+            />
             
             {categories && categories.length > 0 && categories.map(category => {
               const filteredTransactions = getFilteredTransactions();
@@ -393,8 +345,8 @@ export default function Home() {
             
             {(!getFilteredTransactions() || getFilteredTransactions().length === 0) && (
               <div className={styles.emptyState}>
-                <p>📝 Nenhuma transação neste mês</p>
-                <p>Navegue pelos meses ou grave uma nova transação!</p>
+                <p>📝 Nenhuma transação no período selecionado</p>
+                <p>Altere o filtro ou grave uma nova transação!</p>
               </div>
             )}
 
@@ -411,7 +363,17 @@ export default function Home() {
 
         {currentView === 'reports' && (
           <div className={styles.reportsView}>
-            <Reports transactions={transactions || []} />
+            <Reports 
+              transactions={transactions || []} 
+              userName={localStorage.getItem('userName') || undefined}
+              userEmail={userEmail || undefined}
+            />
+          </div>
+        )}
+
+        {currentView === 'profile' && (
+          <div className={styles.profileView}>
+            <Profile userEmail={userEmail} />
           </div>
         )}
       </main>
@@ -504,6 +466,13 @@ export default function Home() {
         >
           <span className={styles.navIcon}>📊</span>
           <span className={styles.navLabel}>Relatórios</span>
+        </button>
+        <button 
+          className={`${styles.bottomNavButton} ${currentView === 'profile' ? styles.active : ''}`}
+          onClick={() => setCurrentView('profile')}
+        >
+          <span className={styles.navIcon}>👤</span>
+          <span className={styles.navLabel}>Perfil</span>
         </button>
       </nav>
 
