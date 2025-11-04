@@ -256,14 +256,14 @@ export class PDFExportService {
         pdf.setFontSize(9);
         
         // Barra de cor
-        const barWidth = (category.value / totals.expense) * (pageWidth - 2 * margin - 60);
+        const barWidth = totals.expense > 0 ? (category.value / totals.expense) * (pageWidth - 2 * margin - 60) : 0;
         pdf.setFillColor(239, 68, 68);
         pdf.rect(margin, yPosition - 3, barWidth, 4, 'F');
         
         pdf.text(this.removeEmojis(category.name), margin, yPosition);
         pdf.text(formatCurrency(category.value), pageWidth - margin - 40, yPosition, { align: 'right' });
         
-        const percentage = ((category.value / totals.expense) * 100).toFixed(1);
+        const percentage = totals.expense > 0 ? ((category.value / totals.expense) * 100).toFixed(1) : '0';
         pdf.text(`${percentage}%`, pageWidth - margin, yPosition, { align: 'right' });
         
         yPosition += 7;
@@ -585,12 +585,12 @@ export class PDFExportService {
               pdf.addPage();
               yPosition = margin;
             }
-            const barWidth = (category.value / options.totals.expense) * (pageWidth - 2 * margin - 60);
+            const barWidth = options.totals.expense > 0 ? (category.value / options.totals.expense) * (pageWidth - 2 * margin - 60) : 0;
             pdf.setFillColor(239, 68, 68);
             pdf.rect(margin, yPosition - 3, barWidth, 4, 'F');
             pdf.text(this.removeEmojis(category.name), margin, yPosition);
             pdf.text(formatCurrency(category.value), pageWidth - margin - 40, yPosition, { align: 'right' });
-            const percentage = ((category.value / options.totals.expense) * 100).toFixed(1);
+            const percentage = options.totals.expense > 0 ? ((category.value / options.totals.expense) * 100).toFixed(1) : '0';
             pdf.text(`${percentage}%`, pageWidth - margin, yPosition, { align: 'right' });
             yPosition += 7;
           });

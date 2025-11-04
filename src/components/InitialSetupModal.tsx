@@ -73,7 +73,6 @@ export const InitialSetupModal: React.FC<InitialSetupModalProps> = ({
             <ul>
               <li>Seu email é usado para identificar sua conta de forma única</li>
               <li>Garantimos a privacidade dos seus dados</li>
-              <li>Você pode alterar isso depois nas configurações</li>
             </ul>
           </div>
 

@@ -149,12 +149,21 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
     return `${((value / total) * 100).toFixed(1)}%`;
   };
 
-  // Custom label para o gráfico de pizza
-  const renderLabel = (entry: any) => {
-    if (!entry.value) {
+  // Custom label para o gráfico de pizza - Gastos
+  const renderExpenseLabel = (entry: any) => {
+    if (!entry.value || totals.expense === 0) {
       return '';
     }
-    const percent = entry.percent || 0;
+    const percent = (entry.value / totals.expense) * 100;
+    return `${percent.toFixed(0)}%`;
+  };
+
+  // Custom label para o gráfico de pizza - Ganhos
+  const renderIncomeLabel = (entry: any) => {
+    if (!entry.value || totals.income === 0) {
+      return '';
+    }
+    const percent = (entry.value / totals.income) * 100;
     return `${percent.toFixed(0)}%`;
   };
 
@@ -333,7 +342,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={renderLabel}
+                    label={renderExpenseLabel}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -383,7 +392,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={renderLabel}
+                    label={renderIncomeLabel}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
