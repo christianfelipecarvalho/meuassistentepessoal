@@ -2,6 +2,7 @@
 
 import { AddTransactionModal } from '@/components/AddTransactionModal';
 import { AdBanner } from '@/components/AdBanner';
+import { AdVertical } from '@/components/AdVertical';
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { EnvironmentBadge } from '@/components/EnvironmentBadge';
@@ -314,24 +315,31 @@ export default function Home() {
             
             <SummaryCards transactions={transactions} />
             
-            {/* Anúncio após resumo */}
-            <AdBanner adFormat="auto" compact />
+            {/* Anúncio in-article após resumo */}
+            <AdBanner 
+              adSlot="7875119612" 
+              adLayout="in-article" 
+              compact 
+            />
           </div>
         )}
 
         {currentView === 'list' && (
           <div className={styles.listView}>
-            <h2>📋 Transações por Categoria</h2>
+            <div className={styles.listHeader}>
+              <h2>📋 Transações por Categoria</h2>
+              
+              <TimeFilter
+                filterType={filterTypeList}
+                onFilterChange={setFilterTypeList}
+                referenceDate={selectedDateList}
+                onDateChange={setSelectedDateList}
+              />
+            </div>
             
-            {/* Filtro de Tempo */}
-            <TimeFilter
-              filterType={filterTypeList}
-              onFilterChange={setFilterTypeList}
-              referenceDate={selectedDateList}
-              onDateChange={setSelectedDateList}
-            />
-            
-            {categories && categories.length > 0 && categories.map(category => {
+            <div className={styles.listContent}>
+              <div className={styles.listMain}>
+                {categories && categories.length > 0 && categories.map(category => {
               const filteredTransactions = getFilteredTransactions();
               const categoryTransactions = filteredTransactions.filter(t => t.category === category.name);
               
@@ -358,10 +366,23 @@ export default function Home() {
               </div>
             )}
 
-            {/* Anúncio no final da lista */}
+            {/* Anúncio in-article no final da lista */}
             {getFilteredTransactions() && getFilteredTransactions().length > 0 && (
-              <AdBanner adFormat="auto" compact />
+              <AdBanner 
+                adSlot="7875119612" 
+                adLayout="in-article" 
+                compact 
+              />
             )}
+              </div>
+              
+              {/* Anúncio vertical (desktop) */}
+              {getFilteredTransactions() && getFilteredTransactions().length > 0 && (
+                <div className={styles.adSidebar}>
+                  <AdVertical />
+                </div>
+              )}
+            </div>
 
             {/* Botão Flutuante para Adicionar Transação */}
             <button 

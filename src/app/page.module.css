@@ -305,11 +305,51 @@
 }
 
 /* List View */
+.listView {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.listHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .listView h2 {
   color: white;
   text-align: center;
-  margin-bottom: 1rem;
+  margin: 0;
   font-size: 1.3rem;
+}
+
+.listContent {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.listMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.adSidebar {
+  display: none; /* Escondido em mobile por padrão */
+  flex-shrink: 0;
+  width: 300px;
+  position: sticky;
+  top: 100px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+/* Mostrar sidebar em telas maiores */
+@media (min-width: 1024px) {
+  .adSidebar {
+    display: block;
+  }
 }
 
 /* Month Navigation for List */
