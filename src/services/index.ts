@@ -83,21 +83,33 @@ export class CategoryService implements ICategoryService {
 
   async initializeDefaultCategories(): Promise<void> {
     const existingCategories = await this.categoryRepository.getAll();
+    const existingCategoryNames = existingCategories.map(c => c.name);
     
-    if (existingCategories.length === 0) {
-      const defaultCategories: Omit<Category, 'id'>[] = [
-        { name: 'Alimentação', color: '#ef4444', icon: '🍽️' },
-        { name: 'Transporte', color: '#06b6d4', icon: '🚗' },
-        { name: 'Saúde', color: '#3b82f6', icon: '🏥' },
-        { name: 'Educação', color: '#10b981', icon: '📚' },
-        { name: 'Lazer', color: '#f59e0b', icon: '🎮' },
-        { name: 'Casa', color: '#8b5cf6', icon: '🏠' },
-        { name: 'Roupas', color: '#ec4899', icon: '👕' },
-        { name: 'Tecnologia', color: '#6366f1', icon: '💻' },
-        { name: 'Outros', color: '#6b7280', icon: '📦' }
-      ];
+    // Categorias padrão de gastos (expense)
+    const expenseCategories: Omit<Category, 'id'>[] = [
+      { name: 'Alimentação', color: '#ef4444', icon: '🍽️' },
+      { name: 'Transporte', color: '#06b6d4', icon: '🚗' },
+      { name: 'Saúde', color: '#3b82f6', icon: '🏥' },
+      { name: 'Educação', color: '#10b981', icon: '📚' },
+      { name: 'Lazer', color: '#f59e0b', icon: '🎮' },
+      { name: 'Casa', color: '#8b5cf6', icon: '🏠' },
+      { name: 'Roupas', color: '#ec4899', icon: '👕' },
+      { name: 'Tecnologia', color: '#6366f1', icon: '💻' },
+      { name: 'Outros', color: '#6b7280', icon: '📦' }
+    ];
 
-      for (const categoryData of defaultCategories) {
+    // Categorias de ganhos (income)
+    const incomeCategories: Omit<Category, 'id'>[] = [
+      { name: 'Salário', color: '#10b981', icon: '💼' },
+      { name: 'Freela', color: '#3b82f6', icon: '💻' },
+      { name: 'Extra', color: '#f59e0b', icon: '⭐' },
+      { name: 'Outros', color: '#6b7280', icon: '📦' }
+    ];
+
+    // Se não há categorias, adicionar todas
+    if (existingCategories.length === 0) {
+      const allCategories = [...expenseCategories, ...incomeCategories];
+      for (const categoryData of allCategories) {
         const categoryEntity = new CategoryEntity(
           undefined,
           categoryData.name,
@@ -105,6 +117,36 @@ export class CategoryService implements ICategoryService {
           categoryData.icon
         );
         await this.categoryRepository.add(categoryEntity.toPlainObject());
+      }
+    } else {
+      // Se já existem categorias, adicionar apenas as que faltam
+      // Primeiro, garantir categorias de gastos
+      for (const categoryData of expenseCategories) {
+        if (!existingCategoryNames.includes(categoryData.name)) {
+          const categoryEntity = new CategoryEntity(
+            undefined,
+            categoryData.name,
+            categoryData.color,
+            categoryData.icon
+          );
+          await this.categoryRepository.add(categoryEntity.toPlainObject());
+        }
+      }
+      
+      // Depois, garantir categorias de ganhos
+      for (const categoryData of incomeCategories) {
+        // Para "Outros", verificar se já existe uma categoria "Outros" de gasto
+        // Se sim, não adicionar duplicado (mas pode ser que queira ter duas separadas)
+        // Por enquanto, vamos adicionar todas as categorias de ganhos
+        if (!existingCategoryNames.includes(categoryData.name)) {
+          const categoryEntity = new CategoryEntity(
+            undefined,
+            categoryData.name,
+            categoryData.color,
+            categoryData.icon
+          );
+          await this.categoryRepository.add(categoryEntity.toPlainObject());
+        }
       }
     }
   }
