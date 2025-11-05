@@ -33,9 +33,11 @@ export default function Home() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showFeedbackPrompt, setShowFeedbackPrompt] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [hasVerticalAd, setHasVerticalAd] = useState(false);
   const clickCountRef = useRef(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const feedbackPromptTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const adSidebarRef = useRef<HTMLDivElement>(null);
 
   // Verificar se já configurou email na primeira vez
   useEffect(() => {
@@ -59,6 +61,60 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Verificar se há anúncio vertical renderizado na sidebar
+  useEffect(() => {
+    if (currentView !== 'list') {
+      setHasVerticalAd(false);
+      return;
+    }
+
+    let checkInterval: NodeJS.Timeout | null = null;
+    let timeout: NodeJS.Timeout | null = null;
+
+    // Aguardar um pouco para o DOM atualizar
+    const initialTimeout = setTimeout(() => {
+      const checkForAd = () => {
+        const sidebar = adSidebarRef.current;
+        if (sidebar) {
+          // Verificar se há algum elemento filho (o AdVertical renderizado)
+          // Se o AdVertical retorna null, a sidebar não terá filhos
+          const hasContent = sidebar.children.length > 0 && 
+                            sidebar.querySelector('[class*="adContainer"]') !== null;
+          setHasVerticalAd(hasContent);
+          return hasContent;
+        }
+        setHasVerticalAd(false);
+        return false;
+      };
+
+      // Verificar imediatamente
+      checkForAd();
+
+      // Verificar periodicamente se há conteúdo na sidebar
+      checkInterval = setInterval(() => {
+        checkForAd();
+      }, 500);
+
+      // Timeout para parar de verificar após 3 segundos
+      timeout = setTimeout(() => {
+        if (checkInterval) {
+          clearInterval(checkInterval);
+        }
+        checkForAd();
+      }, 3000);
+    }, 100);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [currentView]);
   const {
     isOnline,
     transactions,
@@ -337,7 +393,7 @@ export default function Home() {
               />
             </div>
             
-            <div className={styles.listContent}>
+            <div className={`${styles.listContent} ${!hasVerticalAd ? styles.noSidebar : ''}`}>
               <div className={styles.listMain}>
                 {categories && categories.length > 0 && categories.map(category => {
               const filteredTransactions = getFilteredTransactions();
@@ -378,7 +434,7 @@ export default function Home() {
               
               {/* Anúncio vertical (desktop) */}
               {getFilteredTransactions() && getFilteredTransactions().length > 0 && (
-                <div className={styles.adSidebar}>
+                <div ref={adSidebarRef} className={styles.adSidebar}>
                   <AdVertical />
                 </div>
               )}

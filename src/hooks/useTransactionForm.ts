@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Transaction } from '@/types';
 import { ValidationUtils } from '@/utils';
 
@@ -52,6 +52,23 @@ export const useTransactionForm = ({ initialTransaction, onSubmit }: UseTransact
 
   const [formData, setFormData] = useState<TransactionFormData>(getInitialFormData());
   const [errors, setErrors] = useState<ValidationError[]>([]);
+
+  // Atualizar formData quando initialTransaction mudar
+  useEffect(() => {
+    if (initialTransaction) {
+      const dateObj = new Date(initialTransaction.date);
+      const dateString = dateObj.toISOString().slice(0, 16);
+      
+      setFormData({
+        amount: initialTransaction.amount.toString(),
+        type: initialTransaction.type,
+        category: initialTransaction.category,
+        description: initialTransaction.description,
+        date: dateString
+      });
+      setErrors([]);
+    }
+  }, [initialTransaction]);
 
   const validateForm = useCallback((): boolean => {
     const newErrors: ValidationError[] = [];

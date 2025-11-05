@@ -512,11 +512,12 @@ export class SpeechTranscriber implements ISpeechTranscriber {
 
   parseTransaction(text: string): ParsedTransaction {
     const lowerText = text.toLowerCase();
+    const transactionType = this.detectTransactionType(lowerText);
     
     return {
-      type: this.detectTransactionType(lowerText),
+      type: transactionType,
       amount: this.extractAmount(text),
-      category: this.detectCategory(lowerText),
+      category: this.detectCategory(lowerText, transactionType),
       description: text.trim(),
       date: new Date()
     };
@@ -686,8 +687,57 @@ export class SpeechTranscriber implements ISpeechTranscriber {
     return 0;
   }
 
-  private detectCategory(lowerText: string): string {
-    const categoryKeywords = {
+  private detectCategory(lowerText: string, transactionType: 'income' | 'expense'): string {
+    // Se for ganho (income), detectar categorias de ganhos
+    if (transactionType === 'income') {
+      // Verificar Salário primeiro (mais específico)
+      const salarioKeywords = [
+        'salário', 'salario', 'sal', 'salario de', 'recebi de salário',
+        'recebi de salario', 'recebi salário', 'recebi salario',
+        'pagamento', 'folha', 'mensalidade', 'trabalho fixo', 'clt',
+        'carteira assinada', 'empregador', 'empresa'
+      ];
+      if (salarioKeywords.some(keyword => lowerText.includes(keyword))) {
+        return 'Salário';
+      }
+
+      // Verificar Freela
+      const freelaKeywords = [
+        'freela', 'freelancer', 'freelance', 'freelancing', 'freelancing',
+        'projeto', 'projeto freelancer', 'trabalho freelancer',
+        'autônomo', 'autonomo', 'serviço', 'servico', 'contrato',
+        'trabalho autônomo', 'trabalho autonomo', 'trabalho por projeto'
+      ];
+      if (freelaKeywords.some(keyword => lowerText.includes(keyword))) {
+        return 'Freela';
+      }
+
+      // Verificar Extra
+      const extraKeywords = [
+        'extra', 'bônus', 'bonus', 'comissão', 'comissao', 'premiação',
+        'premiacao', 'gratificação', 'gratificacao', 'adicional',
+        'hora extra', 'venda', 'lucro', 'dividendo', 'juros', 'rendimento',
+        'renda extra', 'renda adicional', 'ganho extra', 'ganho adicional'
+      ];
+      if (extraKeywords.some(keyword => lowerText.includes(keyword))) {
+        return 'Extra';
+      }
+
+      // Verificar Outros
+      const outrosKeywords = [
+        'reembolso', 'devolução', 'devolucao', 'cashback', 'cash back',
+        'presente', 'doação', 'doacao', 'herança', 'heranca'
+      ];
+      if (outrosKeywords.some(keyword => lowerText.includes(keyword))) {
+        return 'Outros';
+      }
+
+      // Se não detectou nenhuma categoria específica de ganho, retornar "Outros"
+      return 'Outros';
+    }
+
+    // Se for gasto (expense), detectar categorias de gastos
+    const expenseCategoryKeywords = {
       'Alimentação': [
         'almoço', 'comida', 'lanche', 'café', 'restaurante', 'lanchonete',
         'padaria', 'supermercado', 'mercado', 'feira', 'açougue', 'peixaria',
@@ -731,7 +781,7 @@ export class SpeechTranscriber implements ISpeechTranscriber {
       ]
     };
 
-    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+    for (const [category, keywords] of Object.entries(expenseCategoryKeywords)) {
       if (keywords.some(keyword => lowerText.includes(keyword))) {
         return category;
       }
