@@ -3,23 +3,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './AdBanner.module.css';
 
-interface AdBannerProps {
-  adSlot: string;
-  adFormat?: 'auto' | 'rectangle' | 'horizontal' | 'vertical';
-  adLayout?: 'in-article' | 'fluid';
-  className?: string;
-  compact?: boolean;
-  style?: React.CSSProperties;
-}
-
-export const AdBanner: React.FC<AdBannerProps> = ({
-  adSlot,
-  adFormat = 'auto',
-  adLayout,
-  className = '',
-  compact = false,
-  style,
-}) => {
+/**
+ * Componente para anúncio vertical do Google AdSense
+ * Ad-slot: 2279285801
+ */
+export const AdVertical: React.FC = () => {
   const adRef = useRef<HTMLDivElement>(null);
   const insRef = useRef<HTMLModElement>(null);
   const pushedRef = useRef(false);
@@ -45,7 +33,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
                 setIsVisible(true);
               }, 500);
             } catch (error) {
-              console.error('Erro ao carregar anúncio:', error);
+              console.error('Erro ao carregar anúncio vertical:', error);
             }
           } else if (!pushedRef.current) {
             // Tentar novamente após um delay
@@ -64,7 +52,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
         };
       }
     } catch (error) {
-      console.error('Erro ao inicializar anúncio:', error);
+      console.error('Erro ao inicializar anúncio vertical:', error);
     }
   }, []);
 
@@ -129,28 +117,17 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     return null;
   }
 
-  const containerClass = `${styles.adContainer} ${compact ? styles.compact : ''} ${adFormat === 'vertical' ? styles.vertical : adFormat === 'horizontal' ? styles.horizontal : ''} ${className}`;
-
-  // Props para in-article (bloco dinâmico)
-  const insProps: any = {
-    ref: insRef,
-    className: 'adsbygoogle',
-    style: { display: 'block', textAlign: 'center' },
-    'data-ad-client': 'ca-pub-9039559662831131',
-    'data-ad-slot': adSlot,
-  };
-
-  if (adLayout === 'in-article') {
-    insProps['data-ad-layout'] = 'in-article';
-    insProps['data-ad-format'] = 'fluid';
-  } else {
-    insProps['data-ad-format'] = adFormat;
-    insProps['data-full-width-responsive'] = 'true';
-  }
-
   return (
-    <div ref={adRef} className={containerClass} style={style}>
-      <ins {...insProps} />
+    <div ref={adRef} className={`${styles.adContainer} ${styles.vertical}`}>
+      <ins
+        ref={insRef}
+        className="adsbygoogle"
+        style={{ display: 'block' }}
+        data-ad-client="ca-pub-9039559662831131"
+        data-ad-slot="2279285801"
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      />
     </div>
   );
 };
