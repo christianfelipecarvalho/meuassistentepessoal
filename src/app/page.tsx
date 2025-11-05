@@ -1,6 +1,7 @@
 'use client';
 
 import { AddTransactionModal } from '@/components/AddTransactionModal';
+import { AdBanner } from '@/components/AdBanner';
 import { CategorySection } from '@/components/CategorySection';
 import { EditTransactionModal } from '@/components/EditTransactionModal';
 import { EnvironmentBadge } from '@/components/EnvironmentBadge';
@@ -312,6 +313,9 @@ export default function Home() {
             </div>
             
             <SummaryCards transactions={transactions} />
+            
+            {/* Anúncio após resumo */}
+            <AdBanner adFormat="auto" compact />
           </div>
         )}
 
@@ -352,6 +356,11 @@ export default function Home() {
                 <p>📝 Nenhuma transação no período selecionado</p>
                 <p>Altere o filtro ou grave uma nova transação!</p>
               </div>
+            )}
+
+            {/* Anúncio no final da lista */}
+            {getFilteredTransactions() && getFilteredTransactions().length > 0 && (
+              <AdBanner adFormat="auto" compact />
             )}
 
             {/* Botão Flutuante para Adicionar Transação */}
