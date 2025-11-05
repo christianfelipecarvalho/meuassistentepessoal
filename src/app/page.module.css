@@ -325,14 +325,20 @@
 }
 
 .listContent {
-  display: flex;
+  /*display: flex;*/
   gap: 1.5rem;
   align-items: flex-start;
+}
+
+.listContent.noSidebar {
+  justify-content: center;
 }
 
 .listMain {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .adSidebar {
@@ -349,6 +355,19 @@
 @media (min-width: 1024px) {
   .adSidebar {
     display: block;
+  }
+  
+  /* Quando não há sidebar, centralizar o conteúdo principal */
+  .listContent.noSidebar .listMain {
+    flex: none;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .listContent.noSidebar .listMain > * {
+    width: 100%;
+    max-width: 100%;
   }
 }
 

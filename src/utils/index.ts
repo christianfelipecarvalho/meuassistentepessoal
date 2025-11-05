@@ -280,6 +280,57 @@ export class TransactionFilterUtils {
   }
 }
 
+export class CategoryUtils {
+  // Lista de categorias de ganhos (income)
+  private static readonly INCOME_CATEGORIES = [
+    'Salário',
+    'Freela',
+    'Extra',
+    'Outros'
+  ];
+
+  // Lista de categorias de gastos (expense)
+  private static readonly EXPENSE_CATEGORIES = [
+    'Alimentação',
+    'Transporte',
+    'Saúde',
+    'Educação',
+    'Lazer',
+    'Casa',
+    'Roupas',
+    'Tecnologia',
+    'Outros'
+  ];
+
+  /**
+   * Verifica se uma categoria é de ganho (income)
+   */
+  static isIncomeCategory(categoryName: string): boolean {
+    return this.INCOME_CATEGORIES.includes(categoryName);
+  }
+
+  /**
+   * Verifica se uma categoria é de gasto (expense)
+   */
+  static isExpenseCategory(categoryName: string): boolean {
+    return this.EXPENSE_CATEGORIES.includes(categoryName);
+  }
+
+  /**
+   * Filtra categorias baseado no tipo de transação
+   */
+  static filterCategoriesByType(
+    categories: Array<{ name: string; [key: string]: any }>,
+    type: 'income' | 'expense'
+  ): Array<{ name: string; [key: string]: any }> {
+    if (type === 'income') {
+      return categories.filter(cat => this.isIncomeCategory(cat.name));
+    } else {
+      return categories.filter(cat => this.isExpenseCategory(cat.name));
+    }
+  }
+}
+
 export class StorageUtils {
   static setItem(key: string, value: any): void {
     try {

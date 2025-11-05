@@ -1,5 +1,6 @@
 import { Category } from '@/types';
-import React from 'react';
+import { CategoryUtils } from '@/utils';
+import React, { useMemo, useEffect } from 'react';
 import styles from './EditTransactionModal.module.css';
 
 interface TransactionFormData {
@@ -28,6 +29,19 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const getFieldError = (fieldName: string): string | undefined => {
     return errors.find(error => error.field === fieldName)?.message;
   };
+
+  // Filtrar categorias baseado no tipo de transação
+  const filteredCategories = useMemo(() => {
+    return CategoryUtils.filterCategoriesByType(categories, formData.type);
+  }, [categories, formData.type]);
+
+  // Resetar categoria quando o tipo mudar e a categoria atual não for válida para o novo tipo
+  useEffect(() => {
+    const isValidCategory = filteredCategories.some(cat => cat.name === formData.category);
+    if (formData.category && !isValidCategory) {
+      onFieldChange('category', '');
+    }
+  }, [formData.type, filteredCategories, formData.category, onFieldChange]);
 
   return (
     <>
@@ -88,7 +102,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           className={getFieldError('category') ? styles.inputError : ''}
         >
           <option value="">Selecione uma categoria</option>
-          {categories.map((category) => (
+          {filteredCategories.map((category) => (
             <option key={category.id} value={category.name}>
               {category.icon} {category.name}
             </option>
