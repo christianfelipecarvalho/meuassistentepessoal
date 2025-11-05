@@ -1,5 +1,6 @@
 'use client';
 
+import { AdBanner } from '@/components/AdBanner';
 import { Transaction } from '@/types';
 import { formatCurrency, TimeFilterType, TransactionFilterUtils } from '@/utils';
 import { PDFExportService } from '@/utils/pdfExport';
@@ -514,6 +515,11 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
             </div>
           </div>
         </div>
+      )}
+
+      {/* Anúncio no final dos relatórios */}
+      {filteredData.length > 0 && (
+        <AdBanner adFormat="auto" compact />
       )}
     </div>
   );

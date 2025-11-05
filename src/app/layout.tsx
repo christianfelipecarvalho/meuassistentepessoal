@@ -1,4 +1,5 @@
 import './globals.css';
+import Script from 'next/script';
 
 export const metadata = {
   title: 'Meu Assistente Financeiro',
@@ -30,7 +31,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9039559662831131"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+        {children}
+      </body>
     </html>
   );
 }

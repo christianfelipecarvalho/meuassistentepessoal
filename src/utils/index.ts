@@ -13,6 +13,15 @@ export { formatCurrency, formatDate, formatRelativeDate } from './formatters';
 // Re-export logger
 export { Logger, createLogger } from './logger';
 
+// Re-export environment utilities
+export { 
+  isDevEnvironment, 
+  isHomologEnvironment, 
+  getEnvironmentName, 
+  getEnvironmentColor,
+  shouldShowEnvironmentBadge 
+} from './environment';
+
 // Import para uso interno
 import { formatCurrency, formatDate, formatRelativeDate } from './formatters';
 
