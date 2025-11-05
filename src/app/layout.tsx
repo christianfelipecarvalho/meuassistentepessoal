@@ -1,5 +1,4 @@
 import './globals.css';
-import Script from 'next/script';
 
 export const metadata = {
   title: 'Meu Assistente Financeiro',
@@ -13,6 +12,9 @@ export const metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'Meu Assistente Financeiro',
+  },
+  other: {
+    'google-adsense-account': 'ca-pub-9039559662831131',
   },
 };
 
@@ -31,15 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9039559662831131"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
