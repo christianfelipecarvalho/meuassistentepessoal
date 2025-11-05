@@ -517,9 +517,13 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
         </div>
       )}
 
-      {/* Anúncio no final dos relatórios */}
+      {/* Anúncio in-article no final dos relatórios */}
       {filteredData.length > 0 && (
-        <AdBanner adFormat="auto" compact />
+        <AdBanner 
+          adSlot="7875119612" 
+          adLayout="in-article" 
+          compact 
+        />
       )}
     </div>
   );
