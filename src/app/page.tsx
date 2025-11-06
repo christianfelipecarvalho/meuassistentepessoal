@@ -16,6 +16,7 @@ import { SummaryCards } from '@/components/SummaryCards';
 import { TimeFilter } from '@/components/TimeFilter';
 import { Toast } from '@/components/Toast';
 import { useApp } from '@/hooks/useApp';
+import { useAdSenseControl } from '@/hooks/useAdSenseControl';
 import { TimeFilterType, TransactionFilterUtils } from '@/utils';
 import { useState, useEffect, useRef } from 'react';
 import styles from './page.module.css';
@@ -131,6 +132,17 @@ export default function Home() {
     handleCloseEditModal,
     permissionsGranted
   } = useApp();
+
+  // Controle centralizado de exibição de anúncios (conformidade AdSense)
+  const { canShowAds } = useAdSenseControl({
+    showSetupModal,
+    isEditModalOpen,
+    isAddModalOpen,
+    transactions,
+    currentView,
+    filterTypeList,
+    selectedDateList,
+  });
 
   // Função para mostrar toast
   const showSuccessToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -376,6 +388,7 @@ export default function Home() {
               adSlot="7875119612" 
               adLayout="in-article" 
               compact 
+              disabled={!canShowAds}
             />
           </div>
         )}
@@ -423,21 +436,18 @@ export default function Home() {
             )}
 
             {/* Anúncio in-article no final da lista */}
-            {getFilteredTransactions() && getFilteredTransactions().length > 0 && (
-              <AdBanner 
-                adSlot="7875119612" 
-                adLayout="in-article" 
-                compact 
-              />
-            )}
+            <AdBanner 
+              adSlot="7875119612" 
+              adLayout="in-article" 
+              compact 
+              disabled={!canShowAds}
+            />
               </div>
               
               {/* Anúncio vertical (desktop) */}
-              {getFilteredTransactions() && getFilteredTransactions().length > 0 && (
-                <div ref={adSidebarRef} className={styles.adSidebar}>
-                  <AdVertical />
-                </div>
-              )}
+              <div ref={adSidebarRef} className={styles.adSidebar}>
+                <AdVertical disabled={!canShowAds} />
+              </div>
             </div>
 
             {/* Botão Flutuante para Adicionar Transação */}
@@ -457,6 +467,7 @@ export default function Home() {
               transactions={transactions || []} 
               userName={localStorage.getItem('userName') || undefined}
               userEmail={userEmail || undefined}
+              canShowAds={canShowAds}
             />
           </div>
         )}
