@@ -7,7 +7,11 @@ import styles from './AdBanner.module.css';
  * Componente para anúncio vertical do Google AdSense
  * Ad-slot: 2279285801
  */
-export const AdVertical: React.FC = () => {
+interface AdVerticalProps {
+  disabled?: boolean;
+}
+
+export const AdVertical: React.FC<AdVerticalProps> = ({ disabled = false }) => {
   const adRef = useRef<HTMLDivElement>(null);
   const insRef = useRef<HTMLModElement>(null);
   const pushedRef = useRef(false);
@@ -15,7 +19,7 @@ export const AdVertical: React.FC = () => {
   const [hasAdContent, setHasAdContent] = useState(false);
 
   useEffect(() => {
-    if (!adRef.current || pushedRef.current) {
+    if (!adRef.current || pushedRef.current || disabled) {
       return;
     }
 
@@ -54,11 +58,11 @@ export const AdVertical: React.FC = () => {
     } catch (error) {
       console.error('Erro ao inicializar anúncio vertical:', error);
     }
-  }, []);
+  }, [disabled]);
 
   // Observar quando o anúncio realmente carrega conteúdo
   useEffect(() => {
-    if (!insRef.current || !isVisible) {
+    if (!insRef.current || !isVisible || disabled) {
       return;
     }
 
@@ -110,10 +114,10 @@ export const AdVertical: React.FC = () => {
       clearInterval(checkInterval);
       clearTimeout(timeout);
     };
-  }, [isVisible]);
+  }, [isVisible, disabled]);
 
-  // Não renderizar se não houver conteúdo do anúncio
-  if (!isVisible || !hasAdContent) {
+  // Não renderizar se estiver desabilitado ou não houver conteúdo do anúncio
+  if (disabled || !isVisible || !hasAdContent) {
     return null;
   }
 

@@ -22,6 +22,7 @@ interface ReportsProps {
   transactions: Transaction[];
   userName?: string;
   userEmail?: string;
+  canShowAds?: boolean;
 }
 
 interface CategoryData {
@@ -63,7 +64,7 @@ const INCOME_COLORS = [
   '#6b7280', // Cinza
 ];
 
-export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEmail }) => {
+export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEmail, canShowAds = true }) => {
   // Estado para controlar o filtro de tempo
   const [filterType, setFilterType] = useState<TimeFilterType>('month');
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -518,7 +519,7 @@ export const Reports: React.FC<ReportsProps> = ({ transactions, userName, userEm
       )}
 
       {/* Anúncio in-article no final dos relatórios */}
-      {filteredData.length > 0 && (
+      {canShowAds && filteredData.length > 0 && (
         <AdBanner 
           adSlot="7875119612" 
           adLayout="in-article" 

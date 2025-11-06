@@ -10,6 +10,7 @@ interface AdBannerProps {
   className?: string;
   compact?: boolean;
   style?: React.CSSProperties;
+  disabled?: boolean;
 }
 
 export const AdBanner: React.FC<AdBannerProps> = ({
@@ -19,6 +20,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
   className = '',
   compact = false,
   style,
+  disabled = false,
 }) => {
   const adRef = useRef<HTMLDivElement>(null);
   const insRef = useRef<HTMLModElement>(null);
@@ -27,7 +29,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
   const [hasAdContent, setHasAdContent] = useState(false);
 
   useEffect(() => {
-    if (!adRef.current || pushedRef.current) {
+    if (!adRef.current || pushedRef.current || disabled) {
       return;
     }
 
@@ -66,11 +68,11 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     } catch (error) {
       console.error('Erro ao inicializar anúncio:', error);
     }
-  }, []);
+  }, [disabled]);
 
   // Observar quando o anúncio realmente carrega conteúdo
   useEffect(() => {
-    if (!insRef.current || !isVisible) {
+    if (!insRef.current || !isVisible || disabled) {
       return;
     }
 
@@ -122,10 +124,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       clearInterval(checkInterval);
       clearTimeout(timeout);
     };
-  }, [isVisible]);
+  }, [isVisible, disabled]);
 
-  // Não renderizar se não houver conteúdo do anúncio
-  if (!isVisible || !hasAdContent) {
+  // Não renderizar se estiver desabilitado ou não houver conteúdo do anúncio
+  if (disabled || !isVisible || !hasAdContent) {
     return null;
   }
 
